@@ -59,7 +59,7 @@ export async function createCustomerOrder(
     }
     const { data: addr } = await db
       .from("customer_addresses")
-      .select("line1, city, lat, lng, label")
+      .select("line1, city, department, municipality, lat, lng, label")
       .eq("id", data.addressId)
       .eq("customer_id", customerId)
       .maybeSingle();
@@ -69,6 +69,8 @@ export async function createCustomerOrder(
       label: a.label,
       line1: a.line1,
       city: a.city,
+      department: a.department,
+      municipality: a.municipality,
       lat: a.lat,
       lng: a.lng,
     };

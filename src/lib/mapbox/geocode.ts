@@ -2,6 +2,8 @@
 export interface GeocodedAddress {
   line1: string;
   city: string | null;
+  department: string | null;
+  municipality: string | null;
   fullPlace: string;
 }
 
@@ -36,17 +38,22 @@ export async function reverseGeocode(
   const f = json.features?.[0];
   if (!f?.place_name) return null;
 
-  const city =
+  const municipality =
     f.context?.find((c) => c.id?.startsWith("place."))?.text ??
     f.context?.find((c) => c.id?.startsWith("locality."))?.text ??
     null;
+
+  const department =
+    f.context?.find((c) => c.id?.startsWith("region."))?.text ?? null;
 
   const street = [f.address, f.text].filter(Boolean).join(" ");
   const line1 = street || f.place_name.split(",")[0]?.trim() || f.place_name;
 
   return {
     line1,
-    city,
+    city: municipality,
+    department,
+    municipality,
     fullPlace: f.place_name,
   };
 }

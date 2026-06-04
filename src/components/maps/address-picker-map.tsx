@@ -15,6 +15,8 @@ export interface AddressPickerValue {
   lng: number;
   line1: string;
   city: string | null;
+  department: string | null;
+  municipality: string | null;
 }
 
 export function AddressPickerMap({
@@ -53,10 +55,19 @@ export function AddressPickerMap({
             lng,
             line1: geo.line1,
             city: geo.city,
+            department: geo.department,
+            municipality: geo.municipality,
           });
           setHint(geo.fullPlace);
         } else {
-          onChangeRef.current({ lat, lng, line1: "", city: null });
+          onChangeRef.current({
+            lat,
+            lng,
+            line1: "",
+            city: null,
+            department: null,
+            municipality: null,
+          });
           setHint("No se pudo detectar la dirección. Escríbela manualmente.");
         }
       } finally {

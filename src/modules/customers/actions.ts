@@ -15,6 +15,8 @@ const addressSchema = z.object({
   label: z.string().max(40).optional(),
   line1: z.string().min(3, "Dirección obligatoria").max(200),
   city: z.string().max(80).optional(),
+  department: z.string().max(80).optional(),
+  municipality: z.string().min(2, "Selecciona municipio").max(80),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   notes: z.string().max(200).optional(),
@@ -43,11 +45,14 @@ export async function saveAddress(
       .eq("customer_id", customerId);
   }
 
+  const municipality = d.municipality ?? d.city ?? null;
   const row = {
     customer_id: customerId,
     label: d.label ?? null,
     line1: d.line1,
-    city: d.city ?? null,
+    city: municipality,
+    department: d.department ?? null,
+    municipality,
     lat: d.lat ?? null,
     lng: d.lng ?? null,
     notes: d.notes ?? null,

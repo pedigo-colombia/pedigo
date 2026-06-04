@@ -17,6 +17,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AddressPickerMap } from "@/components/maps/address-picker-map";
+import { ColombiaLocationFields } from "@/components/forms/colombia-location-fields";
+import {
+  getDepartmentById,
+  getMunicipalityById,
+  resolveLocationFromAddress,
+  type ColombiaLocationValue,
+} from "@/lib/colombia/divisions";
 import {
   deleteAddress,
   saveAddress,
@@ -65,8 +72,10 @@ export function DireccionesClient({ addresses }: { addresses: CustomerAddress[] 
                   {a.isDefault && <Badge variant="secondary">Predeterminada</Badge>}
                 </div>
                 <p className="text-sm text-muted-foreground">{a.line1}</p>
-                {a.city && (
-                  <p className="text-sm text-muted-foreground">{a.city}</p>
+                {(a.municipality || a.city || a.department) && (
+                  <p className="text-sm text-muted-foreground">
+                    {[a.municipality ?? a.city, a.department].filter(Boolean).join(", ")}
+                  </p>
                 )}
               </div>
               <div className="flex shrink-0 gap-2">
@@ -133,7 +142,8 @@ function AddressDialog({
   onSave: (payload: {
     label?: string;
     line1: string;
-    city?: string;
+    department?: string;
+    municipality: string;
     lat?: number;
     lng?: number;
     isDefault?: boolean;
@@ -142,13 +152,21 @@ function AddressDialog({
 }) {
   const [label, setLabel] = useState(initial?.label ?? "");
   const [line1, setLine1] = useState(initial?.line1 ?? "");
-  const [city, setCity] = useState(initial?.city ?? "");
+  const [location, setLocation] = useState<ColombiaLocationValue>(() =>
+    resolveLocationFromAddress({
+      department: initial?.department,
+      municipality: initial?.municipality,
+      city: initial?.city,
+    }),
+  );
   const [lat, setLat] = useState<number | null>(initial?.lat ?? null);
   const [lng, setLng] = useState<number | null>(initial?.lng ?? null);
   const [isDefault, setIsDefault] = useState(initial?.isDefault ?? false);
 
   const hasCoords = lat != null && lng != null;
-  const canSave = line1.trim().length >= 3 && hasCoords;
+  const hasDivision =
+    location.departmentId != null && location.municipalityId != null;
+  const canSave = line1.trim().length >= 3 && hasCoords && hasDivision;
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -166,12 +184,20 @@ function AddressDialog({
               setLat(v.lat);
               setLng(v.lng);
               if (v.line1) setLine1(v.line1);
-              if (v.city) setCity(v.city);
+              setLocation(
+                resolveLocationFromAddress({
+                  department: v.department,
+                  municipality: v.municipality ?? v.city,
+                  city: v.municipality ?? v.city,
+                }),
+              );
             }}
           />
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="grid gap-2 sm:col-span-2">
+          <ColombiaLocationFields value={location} onChange={setLocation} />
+
+          <div className="grid gap-3">
+            <div className="grid gap-2">
               <Label>Etiqueta</Label>
               <Input
                 value={label}
@@ -179,20 +205,12 @@ function AddressDialog({
                 placeholder="Casa, Oficina…"
               />
             </div>
-            <div className="grid gap-2 sm:col-span-2">
+            <div className="grid gap-2">
               <Label>Dirección detectada</Label>
               <Input
                 value={line1}
                 onChange={(e) => setLine1(e.target.value)}
-                placeholder="Ajusta si hace falta"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Ciudad</Label>
-              <Input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Bogotá"
+                placeholder="Carrera, calle, número…"
               />
             </div>
           </div>
@@ -200,6 +218,11 @@ function AddressDialog({
           {!hasCoords && (
             <p className="text-xs text-amber-700">
               Marca el pin en el mapa o usa &quot;Usar mi ubicación&quot; para continuar.
+            </p>
+          )}
+          {hasCoords && !hasDivision && (
+            <p className="text-xs text-amber-700">
+              Selecciona departamento y municipio (el mapa intenta autocompletarlos).
             </p>
           )}
 
@@ -215,16 +238,26 @@ function AddressDialog({
         <DialogFooter>
           <Button
             disabled={isPending || !canSave}
-            onClick={() =>
+            onClick={() => {
+              const dept =
+                location.departmentId != null
+                  ? getDepartmentById(location.departmentId)
+                  : undefined;
+              const muni =
+                location.departmentId != null && location.municipalityId != null
+                  ? getMunicipalityById(location.departmentId, location.municipalityId)
+                  : undefined;
+              if (!muni) return;
               onSave({
                 label: label || undefined,
                 line1: line1.trim(),
-                city: city || undefined,
+                department: dept?.name,
+                municipality: muni.name,
                 lat: lat ?? undefined,
                 lng: lng ?? undefined,
                 isDefault,
-              })
-            }
+              });
+            }}
           >
             Guardar
           </Button>

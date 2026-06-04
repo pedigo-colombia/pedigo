@@ -337,7 +337,14 @@ export function ShopClient({
                     {addresses.map((a) => (
                       <option key={a.id} value={a.id}>
                         {(a.label ? `${a.label} — ` : "") + a.line1}
-                        {a.city ? `, ${a.city}` : ""}
+                        {[
+                          a.municipality ?? a.city,
+                          a.department,
+                        ]
+                          .filter(Boolean)
+                          .length > 0
+                          ? `, ${[a.municipality ?? a.city, a.department].filter(Boolean).join(", ")}`
+                          : ""}
                       </option>
                     ))}
                   </select>

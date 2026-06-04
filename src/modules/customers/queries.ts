@@ -9,6 +9,8 @@ export interface CustomerAddress {
   label: string | null;
   line1: string;
   city: string | null;
+  department: string | null;
+  municipality: string | null;
   lat: number | null;
   lng: number | null;
   notes: string | null;
@@ -91,7 +93,7 @@ export async function listMyAddresses(): Promise<CustomerAddress[]> {
   const db = await createSupabaseServerClient();
   const { data } = await db
     .from("customer_addresses")
-    .select("id, label, line1, city, lat, lng, notes, is_default")
+    .select("id, label, line1, city, department, municipality, lat, lng, notes, is_default")
     .eq("customer_id", customerId)
     .order("is_default", { ascending: false });
 
@@ -100,6 +102,8 @@ export async function listMyAddresses(): Promise<CustomerAddress[]> {
     label: (a.label as string | null) ?? null,
     line1: a.line1 as string,
     city: (a.city as string | null) ?? null,
+    department: (a.department as string | null) ?? null,
+    municipality: (a.municipality as string | null) ?? null,
     lat: (a.lat as number | null) ?? null,
     lng: (a.lng as number | null) ?? null,
     notes: (a.notes as string | null) ?? null,
