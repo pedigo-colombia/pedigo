@@ -2,15 +2,15 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 /**
- * Proxy de seguridad (capa 1 / defensa en profundidad).
- * (Next.js 16 renombró el antiguo `middleware` a `proxy`.)
+ * Middleware de seguridad (capa 1 / defensa en profundidad).
+ *
+ * Usamos `middleware.ts` (nombre estándar) para máxima compatibilidad con
+ * Vercel; Next.js 16 también acepta `proxy.ts`, pero en Vercel puede dejar
+ * el deployment en 404 sitewide si el manifiesto de rutas no se genera bien.
  *
  *  - Rutas públicas: landing, auth, webhooks.
  *  - Resto: requiere sesión.
  *  - /admin: requiere superadmin (claim platform_role).
- *
- * La autorización fina (permisos por recurso) se valida además en servidor
- * (guards) y en la base de datos (RLS). Esta es solo la primera barrera.
  */
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -42,7 +42,6 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Salta archivos estáticos e internos de Next.
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
