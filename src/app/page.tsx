@@ -50,7 +50,7 @@ export default function LandingPage() {
     <main className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-20 border-b border-border/80 bg-card/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <PedigoLogo />
+          <PedigoLogo size="md" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Link href="/sign-in" className={buttonVariants({ variant: "ghost" })}>

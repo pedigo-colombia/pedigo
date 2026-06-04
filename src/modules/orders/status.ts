@@ -34,6 +34,46 @@ export const STATUS_CLASSES: Record<OrderStatus, string> = {
   devuelto: "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200",
 };
 
+/** Flujo visible para el cliente en seguimiento de pedido. */
+export const CUSTOMER_TRACKING_STEPS: {
+  status: OrderStatus;
+  label: string;
+}[] = [
+  { status: "recibido", label: "Recibido" },
+  { status: "en_preparacion", label: "Preparando" },
+  { status: "listo", label: "Listo" },
+  { status: "en_camino", label: "En camino" },
+  { status: "entregado", label: "Entregado" },
+];
+
+const TERMINAL_STATUSES: OrderStatus[] = [
+  "cancelado",
+  "rechazado",
+  "incidencia",
+  "reprogramado",
+  "devuelto",
+];
+
+export function getCustomerOrderProgress(status: string): {
+  percent: number;
+  stepIndex: number;
+  terminal: boolean;
+  terminalLabel?: string;
+} {
+  if (TERMINAL_STATUSES.includes(status as OrderStatus)) {
+    return {
+      percent: 0,
+      stepIndex: -1,
+      terminal: true,
+      terminalLabel: STATUS_LABELS[status as OrderStatus],
+    };
+  }
+  const idx = CUSTOMER_TRACKING_STEPS.findIndex((s) => s.status === status);
+  if (idx < 0) return { percent: 8, stepIndex: 0, terminal: false };
+  const percent = Math.round(((idx + 1) / CUSTOMER_TRACKING_STEPS.length) * 100);
+  return { percent, stepIndex: idx, terminal: false };
+}
+
 export const NEXT_STATUSES: Partial<Record<OrderStatus, OrderStatus[]>> = {
   recibido: ["en_preparacion", "rechazado", "cancelado"],
   en_preparacion: ["listo", "incidencia"],

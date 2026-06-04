@@ -7,11 +7,21 @@ import { Home, MapPin, Receipt, ShoppingBag, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "/cuenta", label: "Inicio", icon: Home },
-  { href: "/pedir", label: "Pedir", icon: Store },
-  { href: "/mis-pedidos", label: "Pedidos", icon: ShoppingBag },
-  { href: "/direcciones", label: "Direcciones", icon: MapPin },
-  { href: "/mis-facturas", label: "Facturas", icon: Receipt },
+  { href: "/cuenta", label: "Inicio", icon: Home, match: (p: string) => p === "/cuenta" },
+  {
+    href: "/pedir",
+    label: "Pedir",
+    icon: Store,
+    match: (p: string) => p === "/pedir" || p.startsWith("/pedir/"),
+  },
+  {
+    href: "/mis-pedidos",
+    label: "Pedidos",
+    icon: ShoppingBag,
+    match: (p: string) => p === "/mis-pedidos",
+  },
+  { href: "/direcciones", label: "Direcciones", icon: MapPin, match: (p: string) => p === "/direcciones" },
+  { href: "/mis-facturas", label: "Facturas", icon: Receipt, match: (p: string) => p === "/mis-facturas" },
 ] as const;
 
 export function CustomerMobileNav() {
@@ -21,9 +31,7 @@ export function CustomerMobileNav() {
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur sm:hidden">
       <ul className="mx-auto flex max-w-lg items-stretch justify-around px-1 py-1.5">
         {tabs.map((t) => {
-          const active =
-            pathname === t.href ||
-            (t.href === "/pedir" && pathname.startsWith("/pedir/"));
+          const active = t.match(pathname);
           const Icon = t.icon;
           return (
             <li key={t.href} className="flex-1">

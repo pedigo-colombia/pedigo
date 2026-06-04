@@ -3,17 +3,9 @@ import { redirect } from "next/navigation";
 
 import { PedigoLogo } from "@/components/brand/pedigo-logo";
 import { CustomerMobileNav } from "@/components/shared/customer-mobile-nav";
+import { CustomerNavLinks } from "@/components/shared/customer-nav-links";
 import { HeaderActions } from "@/components/shared/header-actions";
 import { getSession } from "@/modules/auth/session";
-import { cn } from "@/lib/utils";
-
-const links = [
-  { href: "/cuenta", label: "Inicio" },
-  { href: "/pedir", label: "Pedir" },
-  { href: "/mis-pedidos", label: "Mis pedidos" },
-  { href: "/mis-facturas", label: "Facturas" },
-  { href: "/direcciones", label: "Direcciones" },
-];
 
 export default async function CustomerLayout({
   children,
@@ -29,21 +21,9 @@ export default async function CustomerLayout({
         <div className="mx-auto flex h-16 w-full max-w-4xl items-center justify-between px-4 sm:px-8">
           <div className="flex items-center gap-6">
             <Link href="/cuenta">
-              <PedigoLogo size="sm" />
+              <PedigoLogo size="md" />
             </Link>
-            <nav className="hidden gap-1 sm:flex">
-              {links.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={cn(
-                    "rounded-xl px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
-                  )}
-                >
-                  {l.label}
-                </Link>
-              ))}
-            </nav>
+            <CustomerNavLinks />
           </div>
           <HeaderActions />
         </div>

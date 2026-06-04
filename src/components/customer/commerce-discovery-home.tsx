@@ -3,9 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, MapPin, Navigation, Search, Store } from "lucide-react";
+import { ChevronRight, List, MapPin, Navigation, Search, Store } from "lucide-react";
+import { toast } from "sonner";
 
-import { MapboxMap } from "@/components/maps/mapbox-map";
+import { MapboxMap, type MapMarker } from "@/components/maps/mapbox-map";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { brand } from "@/lib/brand/tokens";
@@ -15,8 +16,6 @@ import {
 } from "@/modules/delivery/proximity";
 import type { CommerceDiscoveryItem } from "@/modules/orders/catalog-public";
 import { cn } from "@/lib/utils";
-
-const BOGOTA: [number, number] = [-74.08, 4.65];
 
 export interface CommerceWithDistance extends CommerceDiscoveryItem {
   distanceMeters: number | null;
@@ -41,6 +40,7 @@ export function CommerceDiscoveryHome({
   const [locating, setLocating] = useState(false);
 
   const origin = userCenter ?? center;
+  const mapZoom = userCenter ? 15 : 13;
 
   const sorted = useMemo((): CommerceWithDistance[] => {
     const q = search.trim().toLowerCase();
@@ -61,28 +61,55 @@ export function CommerceDiscoveryHome({
       .sort((a, b) => (a.distanceMeters ?? 0) - (b.distanceMeters ?? 0));
   }, [commerces, origin, search]);
 
-  const markers = useMemo(
-    () =>
-      sorted.map((c) => ({
-        id: c.slug,
-        lng: c.lng,
-        lat: c.lat,
-        popup: c.name,
-        color: brand.orange,
-      })),
-    [sorted],
-  );
+  const markers = useMemo((): MapMarker[] => {
+    const list: MapMarker[] = sorted.map((c) => ({
+      id: c.slug,
+      lng: c.lng,
+      lat: c.lat,
+      popup: c.name,
+      color: brand.orange,
+    }));
+    if (userCenter) {
+      list.unshift({
+        id: "__user_location__",
+        lng: userCenter[0],
+        lat: userCenter[1],
+        popup: "Tu ubicación",
+        color: "#3B82F6",
+      });
+    }
+    return list;
+  }, [sorted, userCenter]);
 
   function useMyLocation() {
-    if (!("geolocation" in navigator)) return;
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      toast.error("La ubicación solo funciona con HTTPS (o en localhost).");
+      return;
+    }
+    if (!("geolocation" in navigator)) {
+      toast.error("Tu navegador no permite geolocalización.");
+      return;
+    }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setLocating(false);
         setUserCenter([p.coords.longitude, p.coords.latitude]);
+        toast.success("Ubicación actualizada en el mapa.");
       },
-      () => setLocating(false),
-      { enableHighAccuracy: true, timeout: 10000 },
+      (err) => {
+        setLocating(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          toast.error(
+            "Permiso denegado. Activa la ubicación para este sitio en la configuración del navegador.",
+          );
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          toast.error("No se pudo obtener tu posición. Intenta de nuevo.");
+        } else {
+          toast.error("Tiempo agotado al buscar tu ubicación.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30_000 },
     );
   }
 
@@ -93,18 +120,33 @@ export function CommerceDiscoveryHome({
           className="absolute inset-0 h-full w-full"
           markers={markers}
           center={origin}
-          zoom={13}
-          fitToMarkers={sorted.length > 1 && !userCenter}
-          onMarkerClick={(slug) => router.push(`/pedir/${slug}`)}
+          zoom={mapZoom}
+          fitToMarkers={!userCenter && sorted.length > 1}
+          followCenter
+          onMarkerClick={(id) => {
+            if (id === "__user_location__") return;
+            router.push(`/pedir/${id}`);
+          }}
         />
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-3 sm:p-4">
           <div className="pointer-events-auto mx-auto max-w-lg space-y-2">
             <div className="rounded-2xl border border-border/80 bg-card/95 p-4 shadow-lg backdrop-blur-md">
-              <p className="pedigo-kicker mb-0.5">PediGo cerca de ti</p>
-              <h1 className="font-heading text-xl font-extrabold tracking-tight sm:text-2xl">
-                Hola, {userName}
-              </h1>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="pedigo-kicker mb-0.5">PediGo cerca de ti</p>
+                  <h1 className="font-heading text-xl font-extrabold tracking-tight sm:text-2xl">
+                    Hola, {userName}
+                  </h1>
+                </div>
+                <Link
+                  href="/pedir"
+                  className="shrink-0 rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold text-brand-orange hover:bg-accent"
+                >
+                  <List className="mr-1 inline h-3.5 w-3.5" />
+                  Lista
+                </Link>
+              </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 Elige un restaurante en el mapa o en la lista
               </p>

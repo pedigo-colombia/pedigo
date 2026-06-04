@@ -8,9 +8,9 @@ import { useResolvedDark } from "@/hooks/use-resolved-theme";
 import { cn } from "@/lib/utils";
 
 const sizes = {
-  sm: { isotipo: 32, horizontal: { w: 120, h: 28 } },
-  md: { isotipo: 36, horizontal: { w: 140, h: 32 } },
-  lg: { isotipo: 44, horizontal: { w: 168, h: 40 } },
+  sm: { isotipo: 36, horizontal: { w: 132, h: 32 }, maxH: "max-h-9 sm:max-h-10" },
+  md: { isotipo: 40, horizontal: { w: 160, h: 38 }, maxH: "max-h-10 sm:max-h-11" },
+  lg: { isotipo: 48, horizontal: { w: 192, h: 46 }, maxH: "max-h-11 sm:max-h-12 lg:max-h-14" },
 } as const;
 
 /**
@@ -56,7 +56,7 @@ export function PedigoLogo({
             alt="PediGo"
             width={dims.horizontal.w}
             height={dims.horizontal.h}
-            className="h-auto w-auto max-h-8 object-contain object-left sm:max-h-9 lg:max-h-10"
+            className={cn("h-auto w-auto object-contain object-left", dims.maxH)}
             priority
             onError={() => setWordmarkFailed(true)}
           />

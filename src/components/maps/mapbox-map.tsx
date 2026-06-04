@@ -16,7 +16,7 @@ export interface MapMarker {
   id: string;
   lng: number;
   lat: number;
-  color?: string;
+  color?: string; // hex, ej. #FF7A00
   popup?: string;
 }
 
@@ -29,6 +29,7 @@ export function MapboxMap({
   zoom = 11,
   className,
   fitToMarkers = false,
+  followCenter = true,
   onMarkerClick,
 }: {
   markers?: MapMarker[];
@@ -38,6 +39,8 @@ export function MapboxMap({
   className?: string;
   /** Ajusta la cámara para mostrar todos los marcadores (ignora center/zoom inicial tras cargar). */
   fitToMarkers?: boolean;
+  /** Mueve la cámara cuando cambian center/zoom (p. ej. geolocalización). */
+  followCenter?: boolean;
   onMarkerClick?: (markerId: string) => void;
 }) {
   const isDark = useResolvedDark();
@@ -103,8 +106,10 @@ export function MapboxMap({
       } else {
         const el = document.createElement("button");
         el.type = "button";
+        const pinColor = m.color ?? brand.orange;
         el.className =
-          "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-brand-orange text-xs font-bold text-white shadow-lg transition-transform hover:scale-110";
+          "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-white text-xs font-bold text-white shadow-lg transition-transform hover:scale-110";
+        el.style.backgroundColor = pinColor;
         el.setAttribute("aria-label", m.popup ?? "Ubicación");
         el.textContent = "P";
         el.addEventListener("click", (e) => {
@@ -135,6 +140,14 @@ export function MapboxMap({
       map.fitBounds(bounds, { padding: 72, maxZoom: 15, duration: 600 });
     }
   }, [markers, fitToMarkers]);
+
+  const centerKey = `${center[0].toFixed(5)},${center[1].toFixed(5)}`;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loadedRef.current || !followCenter || fitToMarkers) return;
+    map.flyTo({ center, zoom, duration: 900, essential: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centerKey, zoom, followCenter, fitToMarkers]);
 
   useEffect(() => {
     const map = mapRef.current;

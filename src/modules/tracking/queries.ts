@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface MyOrderItem {
@@ -7,6 +8,7 @@ export interface MyOrderItem {
   status: string;
   total: number;
   createdAt: string;
+  commerceName: string | null;
 }
 
 export interface OrderTracking {
@@ -23,14 +25,33 @@ export async function getMyOrders(): Promise<MyOrderItem[]> {
   const db = await createSupabaseServerClient();
   const { data } = await db
     .from("orders")
-    .select("id, status, total, created_at")
+    .select("id, status, total, created_at, organization_id")
     .order("created_at", { ascending: false })
     .limit(50);
-  return ((data ?? []) as Array<Record<string, unknown>>).map((o) => ({
+
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  const orgIds = [
+    ...new Set(rows.map((o) => o.organization_id as string).filter(Boolean)),
+  ];
+
+  const orgNames = new Map<string, string>();
+  if (orgIds.length > 0) {
+    const admin = createSupabaseAdminClient();
+    const { data: orgs } = await admin
+      .from("organizations")
+      .select("id, name")
+      .in("id", orgIds);
+    for (const org of (orgs ?? []) as Array<Record<string, unknown>>) {
+      orgNames.set(org.id as string, org.name as string);
+    }
+  }
+
+  return rows.map((o) => ({
     id: o.id as string,
     status: o.status as string,
     total: Number(o.total ?? 0),
     createdAt: o.created_at as string,
+    commerceName: orgNames.get(o.organization_id as string) ?? null,
   }));
 }
 
