@@ -1,10 +1,38 @@
 "use client";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  Building2,
+  ChefHat,
+  LayoutGrid,
+  ListOrdered,
+  MapPin,
+  Package,
+  Receipt,
+  Settings,
+  Truck,
+  Users,
+  Wallet,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { NavItem } from "./nav-config";
+import type { IconName, NavItem } from "./nav-config";
+
+const ICONS: Record<IconName, ComponentType<{ className?: string }>> = {
+  LayoutGrid,
+  ListOrdered,
+  Users,
+  Wallet,
+  Package,
+  ChefHat,
+  Truck,
+  MapPin,
+  Receipt,
+  Settings,
+  Building2,
+};
 
 export function DashboardSidebar({
   items,
@@ -30,6 +58,7 @@ export function DashboardSidebar({
         {items.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(item.href + "/");
+          const Icon = ICONS[item.icon];
           return (
             <Link
               key={item.href}
@@ -41,7 +70,7 @@ export function DashboardSidebar({
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <Icon className="h-4 w-4" />
               {item.label}
             </Link>
           );

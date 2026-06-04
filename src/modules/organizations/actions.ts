@@ -45,9 +45,10 @@ export async function createOrganization(
 
   try {
     // 1. Clerk org
+    // Nota: no enviamos `slug` a Clerk porque esta instancia no tiene slugs de
+    // organización habilitados. El slug se guarda en Supabase (paso 2).
     const clerkOrg = await clerk.organizations.createOrganization({
       name: input.name,
-      slug: input.slug,
     });
 
     // 2. Supabase organization
@@ -100,6 +101,7 @@ export async function createOrganization(
       message: `Comercio "${input.name}" creado e invitación enviada a ${input.adminEmail}.`,
     };
   } catch (err) {
+    console.error("[createOrganization] error:", err);
     const message = err instanceof Error ? err.message : "Error desconocido";
     return { ok: false, message };
   }
