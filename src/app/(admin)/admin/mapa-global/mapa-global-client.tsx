@@ -67,13 +67,7 @@ export function MapaGlobalClient({
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-bold">Mapa global</h2>
-          <p className="text-sm text-muted-foreground">
-            Todos los comercios, repartidores activos y pedidos en despacho.
-          </p>
-        </div>
+      <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{commerces.length} comercios</Badge>
           <Badge variant="secondary">{couriers.length} repartidores</Badge>
@@ -101,7 +95,7 @@ export function MapaGlobalClient({
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-hidden rounded-xl border">
+      <div className="h-[min(60dvh,480px)] min-w-0 overflow-hidden rounded-xl border">
         <MapboxMap markers={markers} center={center} zoom={11} className="h-full w-full" />
       </div>
     </div>
