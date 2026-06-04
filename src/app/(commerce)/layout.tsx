@@ -15,8 +15,7 @@ export default async function CommerceLayout({
 
   if (!session.userId) redirect("/sign-in");
   if (!session.organizationId) {
-    if (session.isSuperadmin) redirect("/admin");
-    redirect("/acceso?aviso=sin-organizacion");
+    redirect("/acceso?aviso=sin-organizacion&tipo=comercio");
   }
   if (session.orgRole === "courier") redirect("/courier");
 
@@ -24,7 +23,12 @@ export default async function CommerceLayout({
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar items={commerceNav} title="Tu restaurante" />
       <div className="flex min-h-screen flex-1 flex-col pb-16 md:pb-0">
-        <DashboardTopbar heading="PediGo Comercio" />
+        <DashboardTopbar
+          heading="PediGo Comercio"
+          accessTipo="comercio"
+          menuItems={commerceNav}
+          menuTitle="Tu restaurante"
+        />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
       <CommerceMobileNav />

@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import { AdminMobileNav } from "@/components/shared/admin-mobile-nav";
+import { DashboardMobileMenu } from "@/components/shared/dashboard-mobile-menu";
 import { DashboardSidebar } from "@/components/shared/dashboard-sidebar";
 import { HeaderActions } from "@/components/shared/header-actions";
 import { adminNav } from "@/components/shared/nav-config";
@@ -16,12 +18,18 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen">
       <DashboardSidebar items={adminNav} title="Superadmin" />
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
-          <h1 className="font-heading text-lg font-bold">Plataforma PediGo</h1>
+      <div className="flex min-h-screen flex-1 flex-col pb-16 md:pb-0">
+        <header className="flex h-16 items-center justify-between gap-2 border-b border-border bg-card px-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            <DashboardMobileMenu items={adminNav} title="Plataforma PediGo" />
+            <h1 className="truncate font-heading text-base font-bold sm:text-lg">
+              Plataforma PediGo
+            </h1>
+          </div>
           <HeaderActions />
         </header>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        <AdminMobileNav />
       </div>
     </div>
   );

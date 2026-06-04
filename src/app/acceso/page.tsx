@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Building2, Shield, User } from "lucide-react";
 
+import { SelectOrganizationHint } from "@/components/auth/select-organization-hint";
 import { PedigoLogo } from "@/components/brand/pedigo-logo";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Card } from "@/components/ui/card";
@@ -33,10 +34,11 @@ const portals = [
 export default async function AccesoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ aviso?: string }>;
+  searchParams: Promise<{ aviso?: string; tipo?: string }>;
 }) {
-  const { aviso } = await searchParams;
+  const { aviso, tipo } = await searchParams;
   const showOrgHint = aviso === "sin-organizacion";
+  const comercioIntent = tipo === "comercio";
 
   return (
     <main className="flex min-h-screen flex-col bg-background">
@@ -61,10 +63,12 @@ export default async function AccesoPage({
           </p>
           {showOrgHint && (
             <p className="mx-auto mt-4 max-w-md rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200">
-              Tu usuario no tiene un comercio asignado. Pide al administrador PediGo que te
-              invite al restaurante, o entra como cliente.
+              {comercioIntent
+                ? "Selecciona el restaurante activo (arriba) para entrar al panel del comercio. Si no aparece ninguno, pide la invitación al administrador PediGo."
+                : "Tu usuario no tiene un comercio asignado. Pide al administrador PediGo que te invite al restaurante, o entra como cliente."}
             </p>
           )}
+          {showOrgHint && comercioIntent && <SelectOrganizationHint />}
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">

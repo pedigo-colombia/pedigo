@@ -17,14 +17,20 @@ export default async function PostLoginPage({
 
   if (!session.userId) redirect("/acceso");
 
-  if (session.isSuperadmin) redirect("/admin");
+  // Superadmin: respetar si entró como comercio o como plataforma
+  if (session.isSuperadmin) {
+    if (intent === "comercio") {
+      if (session.organizationId) redirect("/inicio");
+      redirect("/acceso?aviso=sin-organizacion&tipo=comercio");
+    }
+    redirect("/admin");
+  }
 
   if (session.organizationId) {
     if (session.orgRole === "courier") redirect("/courier");
     redirect("/inicio");
   }
 
-  // Sin organización activa: cliente. Si intentó comercio sin org, guía a accesos.
   if (intent === "comercio" || intent === "admin") {
     redirect("/acceso?aviso=sin-organizacion");
   }
