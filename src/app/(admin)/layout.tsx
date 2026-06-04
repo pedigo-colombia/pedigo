@@ -16,10 +16,10 @@ export default async function AdminLayout({
   if (!session.isSuperadmin) redirect("/post-login");
 
   return (
-    <div className="flex min-h-screen">
+    <div className="dashboard-panel">
       <DashboardSidebar items={adminNav} title="Superadmin" />
-      <div className="flex min-h-screen flex-1 flex-col pb-16 md:pb-0">
-        <header className="flex h-16 items-center justify-between gap-2 border-b border-border bg-card px-4 sm:px-6">
+      <div className="dashboard-panel-main pb-16 md:pb-0">
+        <header className="flex h-16 max-w-full items-center justify-between gap-2 overflow-hidden border-b border-border bg-card px-4 sm:px-6">
           <div className="flex min-w-0 items-center gap-2">
             <DashboardMobileMenu items={adminNav} title="Plataforma PediGo" />
             <h1 className="truncate font-heading text-base font-bold sm:text-lg">
@@ -28,7 +28,9 @@ export default async function AdminLayout({
           </div>
           <HeaderActions />
         </header>
-        <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
+          {children}
+        </main>
         <AdminMobileNav />
       </div>
     </div>

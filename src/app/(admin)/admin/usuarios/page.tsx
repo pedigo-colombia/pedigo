@@ -1,6 +1,13 @@
 import { listPlatformUsers } from "@/modules/admin/queries";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import {
+  DataCard,
+  DataCardList,
+  DataCardRow,
+  DataTableDesktop,
+} from "@/components/shared/data-card";
+import { DashboardPage } from "@/components/shared/dashboard-page";
+import { PageHeader } from "@/components/shared/page-header";
 import {
   Table,
   TableBody,
@@ -16,61 +23,75 @@ export default async function AdminUsuariosPage() {
   const users = await listPlatformUsers();
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h2 className="text-2xl font-bold">Usuarios de la plataforma</h2>
-        <p className="text-sm text-muted-foreground">
-          Espejo de usuarios sincronizados desde Clerk (webhook). Para roles de
-          plataforma, edita la metadata en el dashboard de Clerk.
-        </p>
-      </div>
+    <DashboardPage>
+      <PageHeader
+        title="Usuarios de la plataforma"
+        description="Espejo de usuarios sincronizados desde Clerk (webhook). Para roles de plataforma, edita la metadata en el dashboard de Clerk."
+      />
 
-      <Card className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rol plataforma</TableHead>
-              <TableHead>Registro</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="py-10 text-center text-muted-foreground"
-                >
-                  Aún no hay usuarios sincronizados. Regístrate o espera el
-                  webhook de Clerk.
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-medium">
-                    {u.fullName ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {u.email ?? "—"}
-                  </TableCell>
-                  <TableCell>
-                    {u.platformRole === "superadmin" ? (
-                      <Badge>Superadmin</Badge>
-                    ) : (
-                      <Badge variant="outline">Usuario</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(u.createdAt).toLocaleDateString("es-CO")}
-                  </TableCell>
+      {users.length === 0 ? (
+        <p className="rounded-2xl border border-dashed py-10 text-center text-sm text-muted-foreground">
+          Aún no hay usuarios sincronizados. Regístrate o espera el webhook de Clerk.
+        </p>
+      ) : (
+        <>
+          <DataCardList>
+            {users.map((u) => (
+              <DataCard key={u.id}>
+                <p className="font-semibold">{u.fullName ?? "Sin nombre"}</p>
+                <p className="mt-1 break-all text-sm text-muted-foreground">
+                  {u.email ?? "—"}
+                </p>
+                <DataCardRow label="Rol">
+                  {u.platformRole === "superadmin" ? (
+                    <Badge>Superadmin</Badge>
+                  ) : (
+                    <Badge variant="outline">Usuario</Badge>
+                  )}
+                </DataCardRow>
+                <DataCardRow label="Registro">
+                  {new Date(u.createdAt).toLocaleDateString("es-CO")}
+                </DataCardRow>
+              </DataCard>
+            ))}
+          </DataCardList>
+
+          <DataTableDesktop>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Rol plataforma</TableHead>
+                  <TableHead>Registro</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {users.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">
+                      {u.fullName ?? "—"}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] text-muted-foreground">
+                      {u.email ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      {u.platformRole === "superadmin" ? (
+                        <Badge>Superadmin</Badge>
+                      ) : (
+                        <Badge variant="outline">Usuario</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(u.createdAt).toLocaleDateString("es-CO")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </DataTableDesktop>
+        </>
+      )}
+    </DashboardPage>
   );
 }

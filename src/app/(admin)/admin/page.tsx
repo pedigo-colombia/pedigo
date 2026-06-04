@@ -1,6 +1,8 @@
 import { Building2, Receipt, Truck, Users } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardPage } from "@/components/shared/dashboard-page";
+import { PageHeader } from "@/components/shared/page-header";
 import { getPlatformStats } from "@/modules/admin/queries";
 
 export default async function AdminDashboardPage() {
@@ -14,14 +16,12 @@ export default async function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h2 className="text-2xl font-bold">Resumen de la plataforma</h2>
-        <p className="text-sm text-muted-foreground">
-          Control global. El superadmin crea comercios e invita a sus usuarios.
-        </p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <DashboardPage>
+      <PageHeader
+        title="Resumen de la plataforma"
+        description="Control global. El superadmin crea comercios e invita a sus usuarios."
+      />
+      <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {kpis.map((k) => (
           <Card key={k.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -36,6 +36,6 @@ export default async function AdminDashboardPage() {
           </Card>
         ))}
       </div>
-    </div>
+    </DashboardPage>
   );
 }

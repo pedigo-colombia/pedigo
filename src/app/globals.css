@@ -145,7 +145,13 @@
     @apply rounded-2xl border border-border/70 bg-card shadow-sm;
   }
   .pedigo-page {
-    @apply space-y-6 p-4 sm:p-6 lg:p-8;
+    @apply mx-auto w-full max-w-full min-w-0 space-y-6 p-4 sm:p-6 lg:p-8;
+  }
+  .dashboard-panel {
+    @apply flex min-h-screen w-full max-w-[100vw] overflow-x-hidden;
+  }
+  .dashboard-panel-main {
+    @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden;
   }
   .pedigo-kicker {
     @apply text-xs font-semibold uppercase tracking-wide text-brand-orange;

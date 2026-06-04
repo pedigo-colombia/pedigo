@@ -20,16 +20,18 @@ export default async function CommerceLayout({
   if (session.orgRole === "courier") redirect("/courier");
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="dashboard-panel bg-background">
       <DashboardSidebar items={commerceNav} title="Tu restaurante" />
-      <div className="flex min-h-screen flex-1 flex-col pb-16 md:pb-0">
+      <div className="dashboard-panel-main pb-16 md:pb-0">
         <DashboardTopbar
           heading="PediGo Comercio"
           accessTipo="comercio"
           menuItems={commerceNav}
           menuTitle="Tu restaurante"
         />
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+          {children}
+        </main>
       </div>
       <CommerceMobileNav />
     </div>

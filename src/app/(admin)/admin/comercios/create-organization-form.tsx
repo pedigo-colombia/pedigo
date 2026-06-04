@@ -50,7 +50,9 @@ export function CreateOrganizationForm() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button>Nuevo comercio</Button>} />
+      <DialogTrigger
+        render={<Button className="w-full sm:w-auto">Nuevo comercio</Button>}
+      />
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Crear comercio</DialogTitle>
