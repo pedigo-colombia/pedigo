@@ -79,7 +79,7 @@ export function MapboxMap({
       if (existing) {
         existing.setLngLat([m.lng, m.lat]);
       } else {
-        const marker = new mapboxgl.Marker({ color: m.color ?? "#ea580c" }).setLngLat([
+        const marker = new mapboxgl.Marker({ color: m.color ?? "#FF7A00" }).setLngLat([
           m.lng,
           m.lat,
         ]);
@@ -119,7 +119,7 @@ export function MapboxMap({
           type: "line",
           source: "route",
           layout: { "line-join": "round", "line-cap": "round" },
-          paint: { "line-color": "#ea580c", "line-width": 4 },
+          paint: { "line-color": "#FF7A00", "line-width": 4 },
         });
       }
     };

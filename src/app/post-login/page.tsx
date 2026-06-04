@@ -14,7 +14,7 @@ export default async function PostLoginPage() {
 
   if (session.organizationId) {
     if (session.orgRole === "courier") redirect("/courier");
-    redirect("/pos"); // commerce_admin / commerce_employee
+    redirect("/inicio");
   }
 
   // Sin organización => cliente final.

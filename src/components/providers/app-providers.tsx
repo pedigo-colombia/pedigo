@@ -20,7 +20,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       appearance={{
         baseTheme: isDark ? dark : undefined,
         variables: {
-          colorPrimary: "#ea580c",
+          colorPrimary: "#FF7A00",
           borderRadius: "0.625rem",
         },
       }}

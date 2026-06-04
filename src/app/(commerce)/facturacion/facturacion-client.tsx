@@ -39,11 +39,14 @@ import {
 } from "@/modules/billing/actions";
 import type { InvoiceDetail, InvoiceListItem } from "@/modules/billing/queries";
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
-  issued: "default",
-  accepted: "default",
+const STATUS_VARIANT: Record<
+  string,
+  "default" | "secondary" | "outline" | "success" | "destructive"
+> = {
+  issued: "success",
+  accepted: "success",
   draft: "secondary",
-  rejected: "outline",
+  rejected: "destructive",
   void: "outline",
 };
 

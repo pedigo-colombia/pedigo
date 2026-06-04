@@ -17,11 +17,11 @@ export default async function AdminLayout({
     <div className="flex min-h-screen">
       <DashboardSidebar items={adminNav} title="Superadmin" />
       <div className="flex flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b bg-background px-6">
-          <h1 className="text-lg font-semibold">Plataforma PediGo</h1>
+        <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+          <h1 className="font-heading text-lg font-bold">Plataforma PediGo</h1>
           <HeaderActions />
         </header>
-        <main className="flex-1 overflow-auto bg-muted/10">{children}</main>
+        <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2,
   ChefHat,
+  Home,
   LayoutGrid,
   ListOrdered,
   MapPin,
@@ -17,10 +18,12 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { PedigoLogo } from "@/components/brand/pedigo-logo";
 import { cn } from "@/lib/utils";
 import type { IconName, NavItem } from "./nav-config";
 
 const ICONS: Record<IconName, ComponentType<{ className?: string }>> = {
+  Home,
   LayoutGrid,
   ListOrdered,
   Users,
@@ -44,33 +47,29 @@ export function DashboardSidebar({
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r bg-muted/20 md:flex">
-      <div className="flex h-16 items-center gap-2 border-b px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 font-bold text-white">
-          P
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold leading-none">PediGo</span>
-          <span className="text-xs text-muted-foreground">{title}</span>
-        </div>
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
+      <div className="flex h-16 items-center border-b border-sidebar-border px-5">
+        <PedigoLogo size="sm" />
       </div>
-      <nav className="flex flex-1 flex-col gap-1 p-3">
+      <p className="px-5 pt-4 text-xs font-medium text-muted-foreground">{title}</p>
+      <nav className="flex flex-1 flex-col gap-0.5 p-3">
         {items.map((item) => {
           const active =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+            pathname === item.href ||
+            (item.href !== "/inicio" && pathname.startsWith(item.href + "/"));
           const Icon = ICONS[item.icon];
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
                 active
-                  ? "bg-orange-600 text-white"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "bg-brand-orange text-white shadow-sm"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 shrink-0" />
               {item.label}
             </Link>
           );

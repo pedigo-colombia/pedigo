@@ -208,7 +208,7 @@ export function PosClient({
               <button
                 key={p.id}
                 onClick={() => onProductClick(p)}
-                className="flex flex-col rounded-xl border bg-background p-3 text-left transition-all hover:border-orange-500 hover:shadow-sm"
+                className="flex flex-col rounded-xl border bg-background p-3 text-left transition-all hover:border-brand-orange hover:shadow-sm"
               >
                 <div className="flex items-start justify-between">
                   <span className="text-sm font-medium leading-tight">
@@ -218,7 +218,7 @@ export function PosClient({
                     <Star className="h-3.5 w-3.5 fill-orange-400 text-orange-400" />
                   )}
                 </div>
-                <span className="mt-2 text-base font-semibold text-orange-600">
+                <span className="mt-2 text-base font-semibold text-brand-orange">
                   {formatCOP(p.basePrice)}
                 </span>
                 {(p.variants.length > 0 || p.extras.length > 0) && (
@@ -358,7 +358,7 @@ export function PosClient({
             <Row label="IVA" value={formatCOP(totals.tax)} />
             <div className="flex justify-between border-t pt-1 text-base font-bold">
               <span>Total</span>
-              <span className="text-orange-600">{formatCOP(totals.total)}</span>
+              <span className="text-brand-orange">{formatCOP(totals.total)}</span>
             </div>
           </div>
 
@@ -409,7 +409,7 @@ function CatChip({
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1 text-sm transition-colors",
         active
-          ? "border-orange-600 bg-orange-600 text-white"
+          ? "border-brand-orange bg-brand-orange text-white"
           : "hover:bg-muted",
       )}
     >
@@ -462,7 +462,7 @@ function ProductConfigDialog({
                       className={cn(
                         "rounded-lg border px-3 py-1.5 text-sm",
                         variantId === v.id
-                          ? "border-orange-600 bg-orange-50"
+                          ? "border-brand-orange bg-accent"
                           : "hover:bg-muted",
                       )}
                     >

@@ -129,7 +129,7 @@ export function AddressPickerMap({
     });
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
-    const marker = new mapboxgl.Marker({ color: "#ea580c", draggable: true })
+    const marker = new mapboxgl.Marker({ color: "#FF7A00", draggable: true })
       .setLngLat([startLng, startLat])
       .addTo(map);
 
@@ -178,7 +178,7 @@ export function AddressPickerMap({
         <div ref={containerRef} className="h-56 w-full sm:h-64" />
         {(geocoding || locating) && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
+            <Loader2 className="h-6 w-6 animate-spin text-brand-orange" />
           </div>
         )}
       </div>

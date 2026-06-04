@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MapPin, Receipt, ShoppingBag, Store } from "lucide-react";
 
+import { PageHeader } from "@/components/brand/page-header";
 import { getSessionWithUser } from "@/modules/auth/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -37,18 +38,17 @@ export default async function CuentaPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Hola, {name}</h2>
-        <p className="text-sm text-muted-foreground">
-          Bienvenido a PediGo. Haz seguimiento de tus pedidos en tiempo real.
-        </p>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <PageHeader
+        kicker="Tu cuenta"
+        title={`Hola, ${name}`}
+        description="Sigue tus pedidos, facturas y direcciones desde un solo lugar."
+      />
+      <div className="grid gap-4 sm:grid-cols-2">
         {shortcuts.map((s) => (
           <Link key={s.href} href={s.href}>
-            <Card className="transition-colors hover:border-orange-500">
+            <Card className="transition-colors hover:border-brand-orange/50">
               <CardHeader>
-                <s.icon className="h-6 w-6 text-orange-600" />
+                <s.icon className="h-6 w-6 text-brand-orange" />
                 <CardTitle className="text-base">{s.title}</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">

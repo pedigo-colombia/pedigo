@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Nunito } from "next/font/google";
 
 import { AppProviders } from "@/components/providers/app-providers";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const nunito = Nunito({
+  variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "PediGo · Plataforma multicomercio",
+  title: "PediGo · Plataforma para restaurantes",
   description:
-    "PediGo: POS, pedidos, inventario, cocina, delivery con tracking en vivo y facturación electrónica para restaurantes y comercios de comida.",
+    "Domicilios, pedidos por WhatsApp, facturación DIAN y operación diaria para restaurantes en Colombia.",
 };
 
 export default function RootLayout({
@@ -30,9 +31,9 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${nunito.variable} ${inter.variable} h-full`}
     >
-      <body className="flex min-h-full flex-col bg-background text-foreground">
+      <body className="flex min-h-full flex-col">
         <ThemeProvider>
           <AppProviders>{children}</AppProviders>
         </ThemeProvider>

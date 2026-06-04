@@ -8,6 +8,7 @@
  */
 
 export type IconName =
+  | "Home"
   | "LayoutGrid"
   | "ListOrdered"
   | "Users"
@@ -28,6 +29,7 @@ export interface NavItem {
 
 /** Navegación del panel de comercio (POS como pantalla principal). */
 export const commerceNav: NavItem[] = [
+  { href: "/inicio", label: "Inicio", icon: "Home" },
   { href: "/pos", label: "POS / Ventas", icon: "LayoutGrid" },
   { href: "/pedidos", label: "Pedidos", icon: "ListOrdered" },
   { href: "/clientes", label: "Clientes", icon: "Users" },
