@@ -1,19 +1,9 @@
-import { ModulePlaceholder } from "@/components/shared/module-placeholder";
+import { listMyAddresses } from "@/modules/customers/queries";
+import { DireccionesClient } from "./direcciones-client";
 
-export default function DireccionesPage() {
-  return (
-    <ModulePlaceholder
-      title="Direcciones"
-      phase="Fase 3"
-      description="Administra tus direcciones de entrega guardadas."
-      features={[
-        "Agregar dirección",
-        "Marcar predeterminada",
-        "Ubicar en el mapa",
-        "Editar / eliminar",
-        "Notas de entrega",
-        "Selección rápida en checkout",
-      ]}
-    />
-  );
+export const dynamic = "force-dynamic";
+
+export default async function DireccionesPage() {
+  const addresses = await listMyAddresses();
+  return <DireccionesClient addresses={addresses} />;
 }

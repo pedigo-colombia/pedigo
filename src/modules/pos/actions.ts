@@ -154,6 +154,29 @@ export async function createSale(
     })) as never,
   );
 
+  // Descuenta stock por cada línea vendida.
+  for (const line of data.lines) {
+    const { data: inv } = await db
+      .from("inventory_items")
+      .select("id, stock_qty")
+      .eq("product_id", line.productId)
+      .maybeSingle();
+    if (!inv) continue;
+    const invRow = inv as { id: string; stock_qty: number };
+    const next = Math.max(0, Number(invRow.stock_qty) - line.quantity);
+    await db
+      .from("inventory_items")
+      .update({ stock_qty: next } as never)
+      .eq("id", invRow.id);
+    await db.from("inventory_movements").insert({
+      organization_id: org.organizationId,
+      inventory_item_id: invRow.id,
+      type: "out",
+      qty: line.quantity,
+      reason: `Venta POS #${orderId.slice(0, 6)}`,
+    } as never);
+  }
+
   await db.from("order_status_history").insert({
     order_id: orderId,
     organization_id: org.organizationId,

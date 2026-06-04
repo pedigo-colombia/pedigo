@@ -274,6 +274,7 @@ function CourierDialog({
   onClose: () => void;
   onCreate: (payload: {
     fullName: string;
+    email: string;
     phone?: string;
     vehicleType?: string;
     relationship: string;
@@ -281,6 +282,7 @@ function CourierDialog({
   isPending: boolean;
 }) {
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [vehicleType, setVehicleType] = useState("moto");
   const [relationship, setRelationship] = useState("owned");
@@ -295,6 +297,15 @@ function CourierDialog({
           <div className="grid gap-2">
             <Label>Nombre</Label>
             <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Email (invitación Clerk)</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="repartidor@email.com"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
@@ -331,10 +342,11 @@ function CourierDialog({
         </div>
         <DialogFooter>
           <Button
-            disabled={isPending || fullName.length < 2}
+            disabled={isPending || fullName.length < 2 || !email.includes("@")}
             onClick={() =>
               onCreate({
                 fullName,
+                email,
                 phone: phone || undefined,
                 vehicleType,
                 relationship,

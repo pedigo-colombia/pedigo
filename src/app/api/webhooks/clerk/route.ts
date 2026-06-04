@@ -52,6 +52,15 @@ export async function POST(req: NextRequest) {
         } as never,
         { onConflict: "clerk_user_id" } as never,
       );
+
+      // Vincula repartidor pendiente invitado por email.
+      if (email) {
+        await db
+          .from("couriers")
+          .update({ clerk_user_id: u.id, invite_email: null } as never)
+          .eq("invite_email", email)
+          .is("clerk_user_id", null);
+      }
     }
 
     if (type === "organization.created" || type === "organization.updated") {

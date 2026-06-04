@@ -1,19 +1,15 @@
-import { ModulePlaceholder } from "@/components/shared/module-placeholder";
+import { getGlobalMapData } from "@/modules/admin/queries";
+import { MapaGlobalClient } from "./mapa-global-client";
 
-export default function AdminMapaGlobalPage() {
+export const dynamic = "force-dynamic";
+
+export default async function MapaGlobalPage() {
+  const data = await getGlobalMapData();
   return (
-    <ModulePlaceholder
-      title="Mapa global"
-      phase="Fase 5"
-      description="Vista de plataforma: todos los comercios, repartidores y pedidos activos."
-      features={[
-        "Todos los comercios",
-        "Todos los repartidores",
-        "Pedidos activos globales",
-        "Clustering por densidad",
-        "Filtros por ciudad/estado",
-        "Tracking en tiempo real",
-      ]}
+    <MapaGlobalClient
+      commerces={data.commerces}
+      couriers={data.couriers}
+      orders={data.orders}
     />
   );
 }

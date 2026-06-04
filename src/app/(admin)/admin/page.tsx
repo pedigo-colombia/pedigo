@@ -1,15 +1,18 @@
 import { Building2, Receipt, Truck, Users } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getPlatformStats } from "@/modules/admin/queries";
 
-const kpis = [
-  { label: "Comercios", value: "0", icon: Building2 },
-  { label: "Usuarios", value: "0", icon: Users },
-  { label: "Repartidores", value: "0", icon: Truck },
-  { label: "Facturas emitidas", value: "0", icon: Receipt },
-];
+export default async function AdminDashboardPage() {
+  const stats = await getPlatformStats();
 
-export default function AdminDashboardPage() {
+  const kpis = [
+    { label: "Comercios", value: String(stats.organizations), icon: Building2 },
+    { label: "Usuarios", value: String(stats.users), icon: Users },
+    { label: "Repartidores", value: String(stats.couriers), icon: Truck },
+    { label: "Facturas emitidas", value: String(stats.invoices), icon: Receipt },
+  ];
+
   return (
     <div className="space-y-6 p-6">
       <div>

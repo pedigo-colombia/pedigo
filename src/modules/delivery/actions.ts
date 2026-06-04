@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -15,6 +16,7 @@ export interface DeliveryActionResult {
 
 const courierSchema = z.object({
   fullName: z.string().min(2, "Nombre obligatorio").max(120),
+  email: z.string().email("Email válido obligatorio para invitar"),
   phone: z.string().max(40).optional(),
   vehicleType: z.string().max(40).optional(),
   relationship: z.enum(["owned", "shared"]).default("owned"),
@@ -26,10 +28,14 @@ const assignSchema = z.object({
   method: z.enum(["manual", "auto_proximity"]).default("manual"),
 });
 
-/** Alta de repartidor + vínculo con el comercio (usa service_role). */
+/** Alta de repartidor + vínculo con el comercio + invitación Clerk (org:courier). */
 export async function createCourier(input: unknown): Promise<DeliveryActionResult> {
   await requirePermission("delivery.assign");
   const org = await requireOrg();
+  if (!org.clerkOrgId) {
+    return { ok: false, message: "No hay organización activa en Clerk." };
+  }
+
   const parsed = courierSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Datos inválidos" };
@@ -37,28 +43,45 @@ export async function createCourier(input: unknown): Promise<DeliveryActionResul
   const d = parsed.data;
 
   const admin = createSupabaseAdminClient();
-  const { data: courier, error } = await admin
-    .from("couriers")
-    .insert({
-      full_name: d.fullName,
-      phone: d.phone ?? null,
-      vehicle_type: d.vehicleType ?? "moto",
-      is_active: true,
-    } as never)
-    .select("id")
-    .single();
-  if (error || !courier) {
-    return { ok: false, message: error?.message ?? "No se pudo crear el repartidor" };
+  const clerk = await clerkClient();
+
+  try {
+    const { data: courier, error } = await admin
+      .from("couriers")
+      .insert({
+        full_name: d.fullName,
+        phone: d.phone ?? null,
+        vehicle_type: d.vehicleType ?? "moto",
+        invite_email: d.email,
+        is_active: true,
+      } as never)
+      .select("id")
+      .single();
+    if (error || !courier) {
+      return { ok: false, message: error?.message ?? "No se pudo crear el repartidor" };
+    }
+
+    await admin.from("courier_organization_links").insert({
+      courier_id: (courier as { id: string }).id,
+      organization_id: org.organizationId,
+      relationship: d.relationship,
+    } as never);
+
+    await clerk.organizations.createOrganizationInvitation({
+      organizationId: org.clerkOrgId,
+      emailAddress: d.email,
+      role: "org:courier",
+    });
+
+    revalidatePath("/repartidores");
+    return {
+      ok: true,
+      message: `Repartidor creado. Invitación enviada a ${d.email}.`,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error desconocido";
+    return { ok: false, message };
   }
-
-  await admin.from("courier_organization_links").insert({
-    courier_id: (courier as { id: string }).id,
-    organization_id: org.organizationId,
-    relationship: d.relationship,
-  } as never);
-
-  revalidatePath("/repartidores");
-  return { ok: true, message: "Repartidor creado." };
 }
 
 export async function setCourierActive(

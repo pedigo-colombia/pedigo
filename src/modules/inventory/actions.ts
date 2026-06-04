@@ -51,17 +51,25 @@ export async function createProduct(
   if (error || !product) return fail(error?.message ?? "No se pudo crear el producto");
   const productId = (product as { id: string }).id;
 
-  await db.from("inventory_items").insert({
-    organization_id: org.organizationId,
-    product_id: productId,
-    stock_qty: d.initialStock,
-    min_alert: d.minAlert,
-  } as never);
+  const { data: invItem, error: invErr } = await db
+    .from("inventory_items")
+    .insert({
+      organization_id: org.organizationId,
+      product_id: productId,
+      stock_qty: d.initialStock,
+      min_alert: d.minAlert,
+    } as never)
+    .select("id")
+    .single();
+
+  if (invErr || !invItem) {
+    return fail(invErr?.message ?? "No se pudo crear el inventario");
+  }
 
   if (d.initialStock > 0) {
     await db.from("inventory_movements").insert({
       organization_id: org.organizationId,
-      inventory_item_id: null,
+      inventory_item_id: (invItem as { id: string }).id,
       type: "in",
       qty: d.initialStock,
       reason: "Stock inicial",
