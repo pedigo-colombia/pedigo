@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ChevronLeft } from "lucide-react";
 
 import { listMyAddresses } from "@/modules/customers/queries";
@@ -28,12 +29,20 @@ export default async function PedirComercioPage({
         <ChevronLeft className="h-4 w-4" />
         Todos los comercios
       </Link>
-      <ShopClient
-        commerceName={data.commerce.name}
-        commerceSlug={data.commerce.slug}
-        catalog={data.catalog}
-        addresses={addresses}
-      />
+      <Suspense
+        fallback={
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            Cargando menú…
+          </p>
+        }
+      >
+        <ShopClient
+          commerceName={data.commerce.name}
+          commerceSlug={data.commerce.slug}
+          catalog={data.catalog}
+          addresses={addresses}
+        />
+      </Suspense>
     </div>
   );
 }
