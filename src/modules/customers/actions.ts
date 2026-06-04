@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { auth } from "@clerk/nextjs/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ensureCustomerId } from "./ensure-customer";
 
 export interface CustomerActionResult {
   ok: boolean;
@@ -15,30 +15,19 @@ const addressSchema = z.object({
   label: z.string().max(40).optional(),
   line1: z.string().min(3, "Dirección obligatoria").max(200),
   city: z.string().max(80).optional(),
-  lat: z.number().optional(),
-  lng: z.number().optional(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
   notes: z.string().max(200).optional(),
   isDefault: z.boolean().optional(),
 });
-
-async function requireCustomerId(): Promise<string | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const db = await createSupabaseServerClient();
-  const { data } = await db
-    .from("customers")
-    .select("id")
-    .eq("clerk_user_id", userId)
-    .maybeSingle();
-  return (data as { id: string } | null)?.id ?? null;
-}
 
 export async function saveAddress(
   input: unknown,
   addressId?: string,
 ): Promise<CustomerActionResult> {
-  const customerId = await requireCustomerId();
-  if (!customerId) return { ok: false, message: "No autenticado." };
+  const ensured = await ensureCustomerId();
+  if (!ensured.ok) return { ok: false, message: ensured.message };
+  const customerId = ensured.customerId;
 
   const parsed = addressSchema.safeParse(input);
   if (!parsed.success) {
@@ -82,8 +71,9 @@ export async function saveAddress(
 }
 
 export async function deleteAddress(addressId: string): Promise<CustomerActionResult> {
-  const customerId = await requireCustomerId();
-  if (!customerId) return { ok: false, message: "No autenticado." };
+  const ensured = await ensureCustomerId();
+  if (!ensured.ok) return { ok: false, message: ensured.message };
+  const customerId = ensured.customerId;
 
   const db = await createSupabaseServerClient();
   const { error } = await db
@@ -100,8 +90,9 @@ export async function deleteAddress(addressId: string): Promise<CustomerActionRe
 export async function setDefaultAddress(
   addressId: string,
 ): Promise<CustomerActionResult> {
-  const customerId = await requireCustomerId();
-  if (!customerId) return { ok: false, message: "No autenticado." };
+  const ensured = await ensureCustomerId();
+  if (!ensured.ok) return { ok: false, message: ensured.message };
+  const customerId = ensured.customerId;
 
   const db = await createSupabaseServerClient();
   await db

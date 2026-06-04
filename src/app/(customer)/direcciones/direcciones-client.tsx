@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AddressPickerMap } from "@/components/maps/address-picker-map";
 import {
   deleteAddress,
   saveAddress,
@@ -141,36 +142,67 @@ function AddressDialog({
 }) {
   const [label, setLabel] = useState(initial?.label ?? "");
   const [line1, setLine1] = useState(initial?.line1 ?? "");
-  const [city, setCity] = useState(initial?.city ?? "Bogotá");
+  const [city, setCity] = useState(initial?.city ?? "");
+  const [lat, setLat] = useState<number | null>(initial?.lat ?? null);
+  const [lng, setLng] = useState<number | null>(initial?.lng ?? null);
   const [isDefault, setIsDefault] = useState(initial?.isDefault ?? false);
+
+  const hasCoords = lat != null && lng != null;
+  const canSave = line1.trim().length >= 3 && hasCoords;
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-lg sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{initial ? "Editar dirección" : "Nueva dirección"}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-3">
-          <div className="grid gap-2">
-            <Label>Etiqueta</Label>
-            <Input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="Casa, Oficina…"
-            />
+        <div className="grid gap-4">
+          <AddressPickerMap
+            key={initial?.id ?? "new"}
+            initialLat={initial?.lat}
+            initialLng={initial?.lng}
+            autoLocateOnMount={!initial}
+            onChange={(v) => {
+              setLat(v.lat);
+              setLng(v.lng);
+              if (v.line1) setLine1(v.line1);
+              if (v.city) setCity(v.city);
+            }}
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2 sm:col-span-2">
+              <Label>Etiqueta</Label>
+              <Input
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Casa, Oficina…"
+              />
+            </div>
+            <div className="grid gap-2 sm:col-span-2">
+              <Label>Dirección detectada</Label>
+              <Input
+                value={line1}
+                onChange={(e) => setLine1(e.target.value)}
+                placeholder="Ajusta si hace falta"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>Ciudad</Label>
+              <Input
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Bogotá"
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Dirección</Label>
-            <Input
-              value={line1}
-              onChange={(e) => setLine1(e.target.value)}
-              placeholder="Carrera 15 # 45-20"
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Ciudad</Label>
-            <Input value={city} onChange={(e) => setCity(e.target.value)} />
-          </div>
+
+          {!hasCoords && (
+            <p className="text-xs text-amber-700">
+              Marca el pin en el mapa o usa &quot;Usar mi ubicación&quot; para continuar.
+            </p>
+          )}
+
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -182,12 +214,14 @@ function AddressDialog({
         </div>
         <DialogFooter>
           <Button
-            disabled={isPending || line1.length < 3}
+            disabled={isPending || !canSave}
             onClick={() =>
               onSave({
                 label: label || undefined,
-                line1,
+                line1: line1.trim(),
                 city: city || undefined,
+                lat: lat ?? undefined,
+                lng: lng ?? undefined,
                 isDefault,
               })
             }

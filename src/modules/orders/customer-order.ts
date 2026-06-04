@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { auth } from "@clerk/nextjs/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { ensureCustomerId } from "@/modules/customers/ensure-customer";
 import { calculateTaxes } from "@/modules/billing/tax-calculator";
 import type { InvoiceLineInput } from "@/modules/billing/types";
 import { cartLineSchema } from "@/modules/pos/schema";
@@ -25,16 +26,6 @@ const customerOrderSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-async function getCustomerId(clerkUserId: string): Promise<string | null> {
-  const db = createSupabaseAdminClient();
-  const { data } = await db
-    .from("customers")
-    .select("id")
-    .eq("clerk_user_id", clerkUserId)
-    .maybeSingle();
-  return (data as { id: string } | null)?.id ?? null;
-}
-
 /**
  * Crea un pedido desde la app cliente (canal `app`).
  * Precios y productos se validan en servidor; el cliente queda vinculado por RLS.
@@ -54,8 +45,9 @@ export async function createCustomerOrder(
   const commerce = await getCommerceBySlug(data.commerceSlug);
   if (!commerce) return { ok: false, message: "Comercio no encontrado." };
 
-  const customerId = await getCustomerId(userId);
-  if (!customerId) return { ok: false, message: "Perfil de cliente no encontrado." };
+  const ensured = await ensureCustomerId();
+  if (!ensured.ok) return { ok: false, message: ensured.message };
+  const customerId = ensured.customerId;
 
   const db = createSupabaseAdminClient();
   const orgId = commerce.id;
