@@ -1,8 +1,9 @@
 import "server-only";
 
-import { auth } from "@clerk/nextjs/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/modules/auth/guards";
+import { ensureCustomerId } from "./ensure-customer";
 import {
   ADDRESS_SELECT_FULL,
   ADDRESS_SELECT_LEGACY,
@@ -80,34 +81,22 @@ export interface MyInvoiceItem {
   issuedAt: string | null;
 }
 
-async function getCustomerId(): Promise<string | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const db = await createSupabaseServerClient();
-  const { data } = await db
-    .from("customers")
-    .select("id")
-    .eq("clerk_user_id", userId)
-    .maybeSingle();
-  return (data as { id: string } | null)?.id ?? null;
-}
-
 export async function listMyAddresses(): Promise<CustomerAddress[]> {
-  const customerId = await getCustomerId();
-  if (!customerId) return [];
+  const ensured = await ensureCustomerId();
+  if (!ensured.ok) return [];
 
-  const db = await createSupabaseServerClient();
+  const db = createSupabaseAdminClient();
   let result = await db
     .from("customer_addresses")
     .select(ADDRESS_SELECT_FULL)
-    .eq("customer_id", customerId)
+    .eq("customer_id", ensured.customerId)
     .order("is_default", { ascending: false });
 
   if (result.error && isDivisionColumnError(result.error.message)) {
     result = await db
       .from("customer_addresses")
       .select(ADDRESS_SELECT_LEGACY)
-      .eq("customer_id", customerId)
+      .eq("customer_id", ensured.customerId)
       .order("is_default", { ascending: false });
   }
 

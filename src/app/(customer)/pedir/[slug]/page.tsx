@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 
-import { getCatalogByCommerceSlug } from "@/modules/orders/catalog-public";
 import { listMyAddresses } from "@/modules/customers/queries";
+import { getCatalogByCommerceSlug } from "@/modules/orders/catalog-public";
 import { ShopClient } from "./shop-client";
 
 export const dynamic = "force-dynamic";

@@ -43,6 +43,7 @@ export function RemoteImage({
         src={src}
         alt={alt}
         fill
+        unoptimized
         className={cn("object-cover", className)}
         sizes={sizes}
         priority={priority}

@@ -14,8 +14,9 @@ export default async function CommerceLayout({
   const session = await getSession();
 
   if (!session.userId) redirect("/sign-in");
-  if (!session.organizationId && !session.isSuperadmin) {
-    redirect("/cuenta");
+  if (!session.organizationId) {
+    if (session.isSuperadmin) redirect("/admin");
+    redirect("/acceso?aviso=sin-organizacion");
   }
   if (session.orgRole === "courier") redirect("/courier");
 

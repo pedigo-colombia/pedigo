@@ -2,6 +2,7 @@ import "server-only";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 
+import { resolveInternalOrganizationId } from "./resolve-organization";
 import { mapClerkOrgRole, type AppRole } from "./roles";
 
 /**
@@ -30,14 +31,10 @@ export async function getSession(): Promise<SessionContext> {
   const publicMeta = (claims.publicMetadata ?? {}) as Record<string, unknown>;
   const isSuperadmin = publicMeta.platform_role === "superadmin";
 
-  // El UUID interno de la organización se guarda en la metadata pública de
-  // la organización en Clerk (se setea en el onboarding / webhook).
-  const orgPublicMeta = (claims.org_public_metadata ?? {}) as Record<
-    string,
-    unknown
-  >;
-  const internalOrgId =
-    (orgPublicMeta.organization_id as string | undefined) ?? null;
+  const internalOrgId = await resolveInternalOrganizationId({
+    claims,
+    clerkOrgId: orgId ?? null,
+  });
 
   return {
     userId: userId ?? null,
