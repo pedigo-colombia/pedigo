@@ -6,6 +6,7 @@ import { getSession } from "@/modules/auth/session";
 
 const links = [
   { href: "/cuenta", label: "Inicio" },
+  { href: "/pedir", label: "Pedir" },
   { href: "/mis-pedidos", label: "Mis pedidos" },
   { href: "/mis-facturas", label: "Facturas" },
   { href: "/direcciones", label: "Direcciones" },

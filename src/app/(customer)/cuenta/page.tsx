@@ -1,10 +1,16 @@
 import Link from "next/link";
-import { MapPin, Receipt, ShoppingBag } from "lucide-react";
+import { MapPin, Receipt, ShoppingBag, Store } from "lucide-react";
 
 import { getSessionWithUser } from "@/modules/auth/session";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const shortcuts = [
+  {
+    href: "/pedir",
+    title: "Pedir",
+    desc: "Explora comercios y haz tu pedido.",
+    icon: Store,
+  },
   {
     href: "/mis-pedidos",
     title: "Mis pedidos",
