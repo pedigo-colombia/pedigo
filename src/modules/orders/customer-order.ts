@@ -57,12 +57,26 @@ export async function createCustomerOrder(
     if (!data.addressId) {
       return { ok: false, message: "Selecciona una dirección de entrega." };
     }
-    const { data: addr } = await db
+    let addrResult = await db
       .from("customer_addresses")
       .select("line1, city, department, municipality, lat, lng, label")
       .eq("id", data.addressId)
       .eq("customer_id", customerId)
       .maybeSingle();
+
+    if (
+      addrResult.error &&
+      /department|municipality|schema cache/i.test(addrResult.error.message)
+    ) {
+      addrResult = await db
+        .from("customer_addresses")
+        .select("line1, city, lat, lng, label")
+        .eq("id", data.addressId)
+        .eq("customer_id", customerId)
+        .maybeSingle();
+    }
+
+    const { data: addr } = addrResult;
     if (!addr) return { ok: false, message: "Dirección no válida." };
     const a = addr as Record<string, unknown>;
     addressSnapshot = {

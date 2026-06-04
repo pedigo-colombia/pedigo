@@ -4,26 +4,22 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useResolvedDark } from "@/hooks/use-resolved-theme";
+import {
+  applyPedigoMapAppearance,
+  getPedigoMapStyle,
+} from "@/lib/mapbox/map-appearance";
 
 export interface MapMarker {
   id: string;
   lng: number;
   lat: number;
   color?: string;
-  /** Texto del popup (opcional). */
   popup?: string;
 }
 
 const BOGOTA: [number, number] = [-74.08, 4.65];
 
-/**
- * Mapa Mapbox reutilizable.
- *
- * - Marcadores con diffing por `id` para no recrear el mapa en cada update
- *   (clave para tracking en tiempo real y costo).
- * - Línea de ruta opcional (polyline de coordenadas [lng, lat]).
- * - Si no hay token configurado, muestra un placeholder en vez de romper.
- */
 export function MapboxMap({
   markers = [],
   route = null,
@@ -37,6 +33,7 @@ export function MapboxMap({
   zoom?: number;
   className?: string;
 }) {
+  const isDark = useResolvedDark();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
@@ -44,19 +41,20 @@ export function MapboxMap({
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-  // Init del mapa (una sola vez).
   useEffect(() => {
-    if (!token || !containerRef.current || mapRef.current) return;
+    if (!token || !containerRef.current) return;
+
     mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: getPedigoMapStyle(isDark),
       center,
       zoom,
     });
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
     map.on("load", () => {
       loadedRef.current = true;
+      applyPedigoMapAppearance(map);
     });
     mapRef.current = map;
     const markersMap = markersRef.current;
@@ -68,9 +66,8 @@ export function MapboxMap({
       markersMap.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, isDark]);
 
-  // Diffing de marcadores.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -91,7 +88,6 @@ export function MapboxMap({
         markersRef.current.set(m.id, marker);
       }
     }
-    // Remueve los que ya no están.
     for (const [id, marker] of markersRef.current) {
       if (!seen.has(id)) {
         marker.remove();
@@ -100,7 +96,6 @@ export function MapboxMap({
     }
   }, [markers]);
 
-  // Línea de ruta.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;

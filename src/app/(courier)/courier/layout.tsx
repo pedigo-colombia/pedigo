@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
-
+import { HeaderActions } from "@/components/shared/header-actions";
 import { getSession } from "@/modules/auth/session";
 
 /**
@@ -23,7 +22,7 @@ export default async function CourierLayout({
           </div>
           <span className="font-semibold">Repartidor</span>
         </div>
-        <UserButton />
+        <HeaderActions />
       </header>
       <main className="flex-1 p-4">{children}</main>
     </div>

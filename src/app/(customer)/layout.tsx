@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
-
+import { HeaderActions } from "@/components/shared/header-actions";
 import { getSession } from "@/modules/auth/session";
 
 const links = [
@@ -38,7 +37,7 @@ export default async function CustomerLayout({
             ))}
           </nav>
         </div>
-        <UserButton />
+        <HeaderActions />
       </header>
       <main className="mx-auto w-full max-w-4xl flex-1 p-4 sm:p-8">
         {children}

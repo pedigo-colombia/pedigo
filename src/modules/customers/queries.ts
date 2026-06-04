@@ -3,6 +3,12 @@ import "server-only";
 import { auth } from "@clerk/nextjs/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireOrg } from "@/modules/auth/guards";
+import {
+  ADDRESS_SELECT_FULL,
+  ADDRESS_SELECT_LEGACY,
+  isDivisionColumnError,
+  mapAddressRow,
+} from "./address-db";
 
 export interface CustomerAddress {
   id: string;
@@ -91,24 +97,21 @@ export async function listMyAddresses(): Promise<CustomerAddress[]> {
   if (!customerId) return [];
 
   const db = await createSupabaseServerClient();
-  const { data } = await db
+  let result = await db
     .from("customer_addresses")
-    .select("id, label, line1, city, department, municipality, lat, lng, notes, is_default")
+    .select(ADDRESS_SELECT_FULL)
     .eq("customer_id", customerId)
     .order("is_default", { ascending: false });
 
-  return ((data ?? []) as Array<Record<string, unknown>>).map((a) => ({
-    id: a.id as string,
-    label: (a.label as string | null) ?? null,
-    line1: a.line1 as string,
-    city: (a.city as string | null) ?? null,
-    department: (a.department as string | null) ?? null,
-    municipality: (a.municipality as string | null) ?? null,
-    lat: (a.lat as number | null) ?? null,
-    lng: (a.lng as number | null) ?? null,
-    notes: (a.notes as string | null) ?? null,
-    isDefault: Boolean(a.is_default),
-  }));
+  if (result.error && isDivisionColumnError(result.error.message)) {
+    result = await db
+      .from("customer_addresses")
+      .select(ADDRESS_SELECT_LEGACY)
+      .eq("customer_id", customerId)
+      .order("is_default", { ascending: false });
+  }
+
+  return ((result.data ?? []) as Array<Record<string, unknown>>).map(mapAddressRow);
 }
 
 /** Facturas de pedidos del cliente (RLS invoices_customer_select). */

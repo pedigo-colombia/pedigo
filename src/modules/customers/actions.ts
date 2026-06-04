@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  buildAddressRows,
+  isDivisionColumnError,
+} from "./address-db";
 import { ensureCustomerId } from "./ensure-customer";
 
 export interface CustomerActionResult {
@@ -22,6 +26,48 @@ const addressSchema = z.object({
   notes: z.string().max(200).optional(),
   isDefault: z.boolean().optional(),
 });
+
+async function persistAddress(
+  db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  customerId: string,
+  d: z.infer<typeof addressSchema>,
+  addressId?: string,
+): Promise<CustomerActionResult> {
+  const { full, legacy } = buildAddressRows(customerId, d);
+
+  const save = async (row: Record<string, unknown>) => {
+    if (addressId) {
+      return db
+        .from("customer_addresses")
+        .update(row as never)
+        .eq("id", addressId)
+        .eq("customer_id", customerId);
+    }
+    return db.from("customer_addresses").insert(row as never);
+  };
+
+  let { error } = await save(full);
+  if (error && isDivisionColumnError(error.message)) {
+    ({ error } = await save(legacy));
+    if (!error) {
+      revalidatePath("/direcciones");
+      return {
+        ok: true,
+        message: addressId
+          ? "Dirección actualizada."
+          : "Dirección guardada.",
+      };
+    }
+  }
+
+  if (error) return { ok: false, message: error.message };
+
+  revalidatePath("/direcciones");
+  return {
+    ok: true,
+    message: addressId ? "Dirección actualizada." : "Dirección guardada.",
+  };
+}
 
 export async function saveAddress(
   input: unknown,
@@ -45,34 +91,7 @@ export async function saveAddress(
       .eq("customer_id", customerId);
   }
 
-  const municipality = d.municipality ?? d.city ?? null;
-  const row = {
-    customer_id: customerId,
-    label: d.label ?? null,
-    line1: d.line1,
-    city: municipality,
-    department: d.department ?? null,
-    municipality,
-    lat: d.lat ?? null,
-    lng: d.lng ?? null,
-    notes: d.notes ?? null,
-    is_default: d.isDefault ?? false,
-  };
-
-  if (addressId) {
-    const { error } = await db
-      .from("customer_addresses")
-      .update(row as never)
-      .eq("id", addressId)
-      .eq("customer_id", customerId);
-    if (error) return { ok: false, message: error.message };
-  } else {
-    const { error } = await db.from("customer_addresses").insert(row as never);
-    if (error) return { ok: false, message: error.message };
-  }
-
-  revalidatePath("/direcciones");
-  return { ok: true, message: addressId ? "Dirección actualizada." : "Dirección guardada." };
+  return persistAddress(db, customerId, d, addressId);
 }
 
 export async function deleteAddress(addressId: string): Promise<CustomerActionResult> {

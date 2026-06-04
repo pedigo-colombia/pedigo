@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 
 const features = [
   {
@@ -56,6 +57,7 @@ export default function LandingPage() {
             <span className="text-lg font-semibold">PediGo</span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link href="/sign-in" className={buttonVariants({ variant: "ghost" })}>
               Iniciar sesión
             </Link>

@@ -6,7 +6,12 @@ import { Loader2, MapPin, Navigation } from "lucide-react";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
+import { useResolvedDark } from "@/hooks/use-resolved-theme";
 import { reverseGeocode } from "@/lib/mapbox/geocode";
+import {
+  applyPedigoMapAppearance,
+  getPedigoMapStyle,
+} from "@/lib/mapbox/map-appearance";
 
 const BOGOTA: [number, number] = [-74.08, 4.65];
 
@@ -27,10 +32,10 @@ export function AddressPickerMap({
 }: {
   initialLat?: number | null;
   initialLng?: number | null;
-  /** Pide permiso de ubicación al abrir (solo para direcciones nuevas). */
   autoLocateOnMount?: boolean;
   onChange: (value: AddressPickerValue) => void;
 }) {
+  const isDark = useResolvedDark();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -110,15 +115,15 @@ export function AddressPickerMap({
   }, [setPosition]);
 
   useEffect(() => {
-    if (!token || !containerRef.current || mapRef.current) return;
+    if (!token || !containerRef.current) return;
 
-    mapboxgl.accessToken = token;
     const startLng = initialLng ?? BOGOTA[0];
     const startLat = initialLat ?? BOGOTA[1];
 
+    mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
+      style: getPedigoMapStyle(isDark),
       center: [startLng, startLat],
       zoom: initialLat != null ? 16 : 12,
     });
@@ -137,16 +142,17 @@ export function AddressPickerMap({
       setPosition(e.lngLat.lng, e.lngLat.lat);
     });
 
-    mapRef.current = map;
-    markerRef.current = marker;
-
     map.on("load", () => {
+      applyPedigoMapAppearance(map);
       if (initialLat == null && initialLng == null && autoLocateOnMount) {
         useMyLocation();
       } else {
         resolveAddress(startLng, startLat);
       }
     });
+
+    mapRef.current = map;
+    markerRef.current = marker;
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -155,9 +161,8 @@ export function AddressPickerMap({
       mapRef.current = null;
       markerRef.current = null;
     };
-    // Solo al montar; initial coords vienen del diálogo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, isDark]);
 
   if (!token) {
     return (
