@@ -3,11 +3,10 @@ import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
  * Obtiene el id de `customers` del usuario Clerk actual.
- * Si el webhook no creó el perfil, lo provisiona (mismo criterio que Clerk webhook).
+ * Usa service role para evitar recursión auth/token en el cliente Supabase RLS.
  */
 export async function ensureCustomerId(): Promise<
   { ok: true; customerId: string } | { ok: false; message: string }
@@ -17,8 +16,8 @@ export async function ensureCustomerId(): Promise<
     return { ok: false, message: "Inicia sesión para continuar." };
   }
 
-  const db = await createSupabaseServerClient();
-  const { data: existing } = await db
+  const admin = createSupabaseAdminClient();
+  const { data: existing } = await admin
     .from("customers")
     .select("id")
     .eq("clerk_user_id", userId)
@@ -29,7 +28,6 @@ export async function ensureCustomerId(): Promise<
   }
 
   const user = await currentUser();
-  const admin = createSupabaseAdminClient();
   const { data: created, error } = await admin
     .from("customers")
     .upsert(

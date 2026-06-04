@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Minus, Plus, Search, ShoppingCart, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { SegmentToggle } from "@/components/brand/segment-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -220,7 +221,7 @@ export function ShopClient({
                   className="flex flex-col rounded-xl border bg-background p-3 text-left transition-all hover:border-orange-500"
                 >
                   <span className="text-sm font-medium leading-tight">{p.name}</span>
-                  <span className="mt-2 font-semibold text-orange-600">
+                  <span className="mt-2 font-semibold text-brand-orange">
                     {formatCOP(p.basePrice)}
                   </span>
                   {(p.variants.length > 0 || p.extras.length > 0) && (
@@ -294,27 +295,15 @@ export function ShopClient({
           <div className="space-y-3 border-t p-4">
             <div>
               <Label className="text-xs">Entrega</Label>
-              <div className="mt-1 grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setFulfillment("pickup")}
-                  className={cn(
-                    "rounded-lg border px-3 py-2 text-sm",
-                    fulfillment === "pickup" && "border-orange-600 bg-orange-50",
-                  )}
-                >
-                  Recoger
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFulfillment("delivery")}
-                  className={cn(
-                    "rounded-lg border px-3 py-2 text-sm",
-                    fulfillment === "delivery" && "border-orange-600 bg-orange-50",
-                  )}
-                >
-                  Domicilio
-                </button>
+              <div className="mt-1">
+                <SegmentToggle
+                  value={fulfillment}
+                  options={[
+                    { value: "pickup", label: "Recoger" },
+                    { value: "delivery", label: "Domicilio" },
+                  ]}
+                  onChange={setFulfillment}
+                />
               </div>
             </div>
 
@@ -322,7 +311,7 @@ export function ShopClient({
               <div>
                 <Label className="text-xs">Dirección</Label>
                 {addresses.length === 0 ? (
-                  <p className="mt-1 text-xs text-amber-700">
+                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
                     <a href="/direcciones" className="underline">
                       Agrega una dirección
                     </a>{" "}
@@ -332,7 +321,7 @@ export function ShopClient({
                   <select
                     value={addressId}
                     onChange={(e) => setAddressId(e.target.value)}
-                    className="mt-1 h-9 w-full rounded-lg border bg-background px-2 text-sm"
+                    className="pedigo-select mt-1"
                   >
                     {addresses.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -357,7 +346,7 @@ export function ShopClient({
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="mt-1 h-9 w-full rounded-lg border bg-background px-2 text-sm"
+                className="pedigo-select mt-1"
               >
                 <option value="cash">Efectivo</option>
                 <option value="transfer">Transferencia</option>
@@ -380,11 +369,13 @@ export function ShopClient({
               <Row label="IVA" value={formatCOP(totals.tax)} />
               <div className="flex justify-between border-t pt-1 text-base font-bold">
                 <span>Total</span>
-                <span className="text-orange-600">{formatCOP(totals.total)}</span>
+                <span className="text-brand-orange">{formatCOP(totals.total)}</span>
               </div>
             </div>
 
             <Button
+              type="button"
+              variant="default"
               className="w-full"
               size="lg"
               disabled={cart.length === 0 || isPending}
@@ -432,7 +423,9 @@ function CatChip({
       onClick={onClick}
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1 text-sm transition-colors",
-        active ? "border-orange-600 bg-orange-600 text-white" : "hover:bg-muted",
+        active
+          ? "border-brand-orange bg-brand-orange text-white"
+          : "border-border bg-card text-foreground hover:bg-muted",
       )}
     >
       {children}
@@ -483,7 +476,7 @@ function ProductConfigDialog({
                       className={cn(
                         "rounded-lg border px-3 py-1.5 text-sm",
                         variantId === v.id
-                          ? "border-orange-600 bg-orange-50"
+                          ? "border-brand-orange bg-accent text-foreground"
                           : "hover:bg-muted",
                       )}
                     >

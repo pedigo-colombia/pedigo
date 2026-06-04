@@ -150,6 +150,12 @@
   .pedigo-kicker {
     @apply text-xs font-semibold uppercase tracking-wide text-brand-orange;
   }
+  .pedigo-select {
+    @apply h-10 w-full rounded-xl border border-input bg-card px-3 text-sm text-foreground;
+  }
+  .dark .pedigo-select {
+    color-scheme: dark;
+  }
 }
 
 .dark .mapboxgl-ctrl-group button {

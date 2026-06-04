@@ -11,6 +11,7 @@ import { reverseGeocode } from "@/lib/mapbox/geocode";
 import {
   applyPedigoMapAppearance,
   getPedigoMapStyle,
+  resetPedigoMapAppearance,
 } from "@/lib/mapbox/map-appearance";
 
 const BOGOTA: [number, number] = [-74.08, 4.65];
@@ -41,12 +42,21 @@ export function AddressPickerMap({
   const markerRef = useRef<mapboxgl.Marker | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onChangeRef = useRef(onChange);
+  const lastEmitKeyRef = useRef("");
+  const mountedRef = useRef(false);
   onChangeRef.current = onChange;
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const [geocoding, setGeocoding] = useState(false);
   const [locating, setLocating] = useState(false);
   const [hint, setHint] = useState("Toca el mapa o arrastra el pin para ubicar tu dirección.");
+
+  const emitChange = useCallback((value: AddressPickerValue) => {
+    const key = `${value.lng.toFixed(5)},${value.lat.toFixed(5)},${value.line1},${value.department},${value.municipality}`;
+    if (key === lastEmitKeyRef.current) return;
+    lastEmitKeyRef.current = key;
+    onChangeRef.current(value);
+  }, []);
 
   const resolveAddress = useCallback(
     async (lng: number, lat: number) => {
@@ -55,7 +65,7 @@ export function AddressPickerMap({
       try {
         const geo = await reverseGeocode(lng, lat, token);
         if (geo) {
-          onChangeRef.current({
+          emitChange({
             lat,
             lng,
             line1: geo.line1,
@@ -65,7 +75,7 @@ export function AddressPickerMap({
           });
           setHint(geo.fullPlace);
         } else {
-          onChangeRef.current({
+          emitChange({
             lat,
             lng,
             line1: "",
@@ -79,7 +89,7 @@ export function AddressPickerMap({
         setGeocoding(false);
       }
     },
-    [token],
+    [token, emitChange],
   );
 
   const setPosition = useCallback(
@@ -90,7 +100,7 @@ export function AddressPickerMap({
       marker.setLngLat([lng, lat]);
       if (fly) map.flyTo({ center: [lng, lat], zoom: 16, duration: 800 });
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => resolveAddress(lng, lat), 350);
+      debounceRef.current = setTimeout(() => resolveAddress(lng, lat), 400);
     },
     [resolveAddress],
   );
@@ -114,8 +124,10 @@ export function AddressPickerMap({
     );
   }, [setPosition]);
 
+  // Inicializa el mapa una sola vez.
   useEffect(() => {
-    if (!token || !containerRef.current) return;
+    if (!token || !containerRef.current || mountedRef.current) return;
+    mountedRef.current = true;
 
     const startLng = initialLng ?? BOGOTA[0];
     const startLat = initialLat ?? BOGOTA[1];
@@ -142,7 +154,7 @@ export function AddressPickerMap({
       setPosition(e.lngLat.lng, e.lngLat.lat);
     });
 
-    map.on("load", () => {
+    map.once("load", () => {
       applyPedigoMapAppearance(map);
       if (initialLat == null && initialLng == null && autoLocateOnMount) {
         useMyLocation();
@@ -160,9 +172,21 @@ export function AddressPickerMap({
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
+      mountedRef.current = false;
+      lastEmitKeyRef.current = "";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isDark]);
+  }, [token]);
+
+  const themeRef = useRef(isDark);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || themeRef.current === isDark) return;
+    themeRef.current = isDark;
+    resetPedigoMapAppearance(map);
+    map.setStyle(getPedigoMapStyle(isDark));
+    map.once("style.load", () => applyPedigoMapAppearance(map, true));
+  }, [isDark]);
 
   if (!token) {
     return (
@@ -174,10 +198,10 @@ export function AddressPickerMap({
 
   return (
     <div className="space-y-2">
-      <div className="relative overflow-hidden rounded-xl border">
+      <div className="relative overflow-hidden rounded-xl border border-border">
         <div ref={containerRef} className="h-56 w-full sm:h-64" />
         {(geocoding || locating) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60">
             <Loader2 className="h-6 w-6 animate-spin text-brand-orange" />
           </div>
         )}

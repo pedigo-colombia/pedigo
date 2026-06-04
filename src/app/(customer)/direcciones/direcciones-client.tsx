@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { MapPin, Plus, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -168,6 +168,33 @@ function AddressDialog({
     location.departmentId != null && location.municipalityId != null;
   const canSave = line1.trim().length >= 3 && hasCoords && hasDivision;
 
+  const handleMapChange = useCallback(
+    (v: {
+      lat: number;
+      lng: number;
+      line1: string;
+      department: string | null;
+      municipality: string | null;
+      city: string | null;
+    }) => {
+      setLat(v.lat);
+      setLng(v.lng);
+      if (v.line1) setLine1((prev) => (prev === v.line1 ? prev : v.line1));
+      const next = resolveLocationFromAddress({
+        department: v.department,
+        municipality: v.municipality ?? v.city,
+        city: v.municipality ?? v.city,
+      });
+      setLocation((prev) =>
+        prev.departmentId === next.departmentId &&
+        prev.municipalityId === next.municipalityId
+          ? prev
+          : next,
+      );
+    },
+    [],
+  );
+
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg sm:max-w-xl">
@@ -180,18 +207,7 @@ function AddressDialog({
             initialLat={initial?.lat}
             initialLng={initial?.lng}
             autoLocateOnMount={!initial}
-            onChange={(v) => {
-              setLat(v.lat);
-              setLng(v.lng);
-              if (v.line1) setLine1(v.line1);
-              setLocation(
-                resolveLocationFromAddress({
-                  department: v.department,
-                  municipality: v.municipality ?? v.city,
-                  city: v.municipality ?? v.city,
-                }),
-              );
-            }}
+            onChange={handleMapChange}
           />
 
           <ColombiaLocationFields value={location} onChange={setLocation} />
@@ -216,12 +232,12 @@ function AddressDialog({
           </div>
 
           {!hasCoords && (
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-amber-600 dark:text-amber-400">
               Marca el pin en el mapa o usa &quot;Usar mi ubicación&quot; para continuar.
             </p>
           )}
           {hasCoords && !hasDivision && (
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-amber-600 dark:text-amber-400">
               Selecciona departamento y municipio (el mapa intenta autocompletarlos).
             </p>
           )}
@@ -237,6 +253,9 @@ function AddressDialog({
         </div>
         <DialogFooter>
           <Button
+            type="button"
+            variant="default"
+            size="lg"
             disabled={isPending || !canSave}
             onClick={() => {
               const dept =

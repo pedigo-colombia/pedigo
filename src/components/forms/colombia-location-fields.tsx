@@ -44,7 +44,7 @@ export function ColombiaLocationFields({
             const id = e.target.value ? Number(e.target.value) : null;
             onChange({ departmentId: id, municipalityId: null });
           }}
-          className="h-9 w-full rounded-lg border bg-background px-2 text-sm"
+          className="pedigo-select"
         >
           <option value="">Selecciona departamento</option>
           {departments.map((d) => (
@@ -63,7 +63,7 @@ export function ColombiaLocationFields({
             const id = e.target.value ? Number(e.target.value) : null;
             onChange({ departmentId: value.departmentId, municipalityId: id });
           }}
-          className="h-9 w-full rounded-lg border bg-background px-2 text-sm"
+          className="pedigo-select"
         >
           <option value="">
             {value.departmentId == null ? "Primero el departamento" : "Selecciona municipio"}

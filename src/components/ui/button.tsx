@@ -11,7 +11,7 @@ const buttonVariants = cva(
         default:
           "bg-brand-orange text-white shadow-sm hover:bg-[#e66f00] focus-visible:ring-brand-orange/30",
         outline:
-          "border-brand-navy/20 bg-card text-brand-navy hover:bg-muted dark:border-border dark:text-foreground",
+          "border-border bg-card text-foreground hover:bg-muted dark:border-border dark:bg-card dark:text-foreground",
         secondary:
           "bg-card text-brand-navy ring-1 ring-border hover:bg-muted dark:text-foreground",
         ghost: "text-brand-navy hover:bg-accent hover:text-brand-navy dark:text-foreground",

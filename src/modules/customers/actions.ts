@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   buildAddressRows,
   isDivisionColumnError,
@@ -28,11 +28,11 @@ const addressSchema = z.object({
 });
 
 async function persistAddress(
-  db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   customerId: string,
   d: z.infer<typeof addressSchema>,
   addressId?: string,
 ): Promise<CustomerActionResult> {
+  const db = createSupabaseAdminClient();
   const { full, legacy } = buildAddressRows(customerId, d);
 
   const save = async (row: Record<string, unknown>) => {
@@ -49,18 +49,11 @@ async function persistAddress(
   let { error } = await save(full);
   if (error && isDivisionColumnError(error.message)) {
     ({ error } = await save(legacy));
-    if (!error) {
-      revalidatePath("/direcciones");
-      return {
-        ok: true,
-        message: addressId
-          ? "Dirección actualizada."
-          : "Dirección guardada.",
-      };
-    }
   }
 
-  if (error) return { ok: false, message: error.message };
+  if (error) {
+    return { ok: false, message: error.message };
+  }
 
   revalidatePath("/direcciones");
   return {
@@ -82,16 +75,16 @@ export async function saveAddress(
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
   const d = parsed.data;
-  const db = await createSupabaseServerClient();
 
   if (d.isDefault) {
+    const db = createSupabaseAdminClient();
     await db
       .from("customer_addresses")
       .update({ is_default: false } as never)
       .eq("customer_id", customerId);
   }
 
-  return persistAddress(db, customerId, d, addressId);
+  return persistAddress(customerId, d, addressId);
 }
 
 export async function deleteAddress(addressId: string): Promise<CustomerActionResult> {
@@ -99,7 +92,7 @@ export async function deleteAddress(addressId: string): Promise<CustomerActionRe
   if (!ensured.ok) return { ok: false, message: ensured.message };
   const customerId = ensured.customerId;
 
-  const db = await createSupabaseServerClient();
+  const db = createSupabaseAdminClient();
   const { error } = await db
     .from("customer_addresses")
     .delete()
@@ -118,7 +111,7 @@ export async function setDefaultAddress(
   if (!ensured.ok) return { ok: false, message: ensured.message };
   const customerId = ensured.customerId;
 
-  const db = await createSupabaseServerClient();
+  const db = createSupabaseAdminClient();
   await db
     .from("customer_addresses")
     .update({ is_default: false } as never)

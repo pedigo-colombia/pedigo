@@ -28,7 +28,7 @@ export default async function PedirPage() {
             <Link key={c.id} href={`/pedir/${c.slug}`}>
               <Card className="transition-colors hover:border-orange-500">
                 <CardHeader className="flex flex-row items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-700">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-700 dark:bg-orange-950/50 dark:text-orange-200">
                     <Store className="h-5 w-5" />
                   </div>
                   <CardTitle className="text-base">{c.name}</CardTitle>
