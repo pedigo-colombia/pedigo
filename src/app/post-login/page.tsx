@@ -1,15 +1,22 @@
 import { redirect } from "next/navigation";
 
+import { parseAccessTipo } from "@/lib/auth/access-types";
 import { getSession } from "@/modules/auth/session";
 
 /**
- * Enrutador post-login.
- * Decide el panel según el rol resuelto del usuario.
+ * Enrutador post-login: envía cada perfil a su panel.
  */
-export default async function PostLoginPage() {
+export default async function PostLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tipo?: string }>;
+}) {
   const session = await getSession();
+  const { tipo: tipoRaw } = await searchParams;
+  const intent = parseAccessTipo(tipoRaw);
 
-  if (!session.userId) redirect("/sign-in");
+  if (!session.userId) redirect("/acceso");
+
   if (session.isSuperadmin) redirect("/admin");
 
   if (session.organizationId) {
@@ -17,6 +24,10 @@ export default async function PostLoginPage() {
     redirect("/inicio");
   }
 
-  // Sin organización => cliente final.
+  // Sin organización activa: cliente. Si intentó comercio sin org, guía a accesos.
+  if (intent === "comercio" || intent === "admin") {
+    redirect("/acceso?aviso=sin-organizacion");
+  }
+
   redirect("/cuenta");
 }
