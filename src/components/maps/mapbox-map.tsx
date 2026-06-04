@@ -5,9 +5,11 @@ import mapboxgl from "mapbox-gl";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useResolvedDark } from "@/hooks/use-resolved-theme";
+import { brand } from "@/lib/brand/tokens";
 import {
   applyPedigoMapAppearance,
   getPedigoMapStyle,
+  resetPedigoMapAppearance,
 } from "@/lib/mapbox/map-appearance";
 
 export interface MapMarker {
@@ -26,23 +28,32 @@ export function MapboxMap({
   center = BOGOTA,
   zoom = 11,
   className,
+  fitToMarkers = false,
+  onMarkerClick,
 }: {
   markers?: MapMarker[];
   route?: [number, number][] | null;
   center?: [number, number];
   zoom?: number;
   className?: string;
+  /** Ajusta la cámara para mostrar todos los marcadores (ignora center/zoom inicial tras cargar). */
+  fitToMarkers?: boolean;
+  onMarkerClick?: (markerId: string) => void;
 }) {
   const isDark = useResolvedDark();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const loadedRef = useRef(false);
+  const mountedRef = useRef(false);
+  const onMarkerClickRef = useRef(onMarkerClick);
+  onMarkerClickRef.current = onMarkerClick;
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
   useEffect(() => {
-    if (!token || !containerRef.current) return;
+    if (!token || !containerRef.current || mountedRef.current) return;
+    mountedRef.current = true;
 
     mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
@@ -52,7 +63,7 @@ export function MapboxMap({
       zoom,
     });
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
-    map.on("load", () => {
+    map.once("load", () => {
       loadedRef.current = true;
       applyPedigoMapAppearance(map);
     });
@@ -63,10 +74,21 @@ export function MapboxMap({
       map.remove();
       mapRef.current = null;
       loadedRef.current = false;
+      mountedRef.current = false;
       markersMap.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isDark]);
+  }, [token]);
+
+  const themeRef = useRef(isDark);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || themeRef.current === isDark) return;
+    themeRef.current = isDark;
+    resetPedigoMapAppearance(map);
+    map.setStyle(getPedigoMapStyle(isDark));
+    map.once("style.load", () => applyPedigoMapAppearance(map, true));
+  }, [isDark]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -79,11 +101,23 @@ export function MapboxMap({
       if (existing) {
         existing.setLngLat([m.lng, m.lat]);
       } else {
-        const marker = new mapboxgl.Marker({ color: m.color ?? "#FF7A00" }).setLngLat([
-          m.lng,
-          m.lat,
-        ]);
-        if (m.popup) marker.setPopup(new mapboxgl.Popup({ offset: 24 }).setText(m.popup));
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className =
+          "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-brand-orange text-xs font-bold text-white shadow-lg transition-transform hover:scale-110";
+        el.setAttribute("aria-label", m.popup ?? "Ubicación");
+        el.textContent = "P";
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          onMarkerClickRef.current?.(m.id);
+        });
+
+        const marker = new mapboxgl.Marker({ element: el }).setLngLat([m.lng, m.lat]);
+        if (m.popup) {
+          marker.setPopup(
+            new mapboxgl.Popup({ offset: 28, closeButton: false }).setText(m.popup),
+          );
+        }
         marker.addTo(map);
         markersRef.current.set(m.id, marker);
       }
@@ -94,7 +128,13 @@ export function MapboxMap({
         markersRef.current.delete(id);
       }
     }
-  }, [markers]);
+
+    if (fitToMarkers && markers.length > 0 && loadedRef.current) {
+      const bounds = new mapboxgl.LngLatBounds();
+      for (const m of markers) bounds.extend([m.lng, m.lat]);
+      map.fitBounds(bounds, { padding: 72, maxZoom: 15, duration: 600 });
+    }
+  }, [markers, fitToMarkers]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -119,7 +159,7 @@ export function MapboxMap({
           type: "line",
           source: "route",
           layout: { "line-join": "round", "line-cap": "round" },
-          paint: { "line-color": "#FF7A00", "line-width": 4 },
+          paint: { "line-color": brand.orange, "line-width": 4 },
         });
       }
     };

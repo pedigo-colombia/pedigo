@@ -9,6 +9,14 @@ export interface CommerceListItem {
   slug: string;
 }
 
+/** Comercio activo con sede principal para mapa de descubrimiento. */
+export interface CommerceDiscoveryItem extends CommerceListItem {
+  lat: number;
+  lng: number;
+  address: string | null;
+  locationName: string | null;
+}
+
 /** Comercios activos disponibles para pedir (lectura pública vía servidor). */
 export async function listActiveCommerces(): Promise<CommerceListItem[]> {
   const db = createSupabaseAdminClient();
@@ -23,6 +31,59 @@ export async function listActiveCommerces(): Promise<CommerceListItem[]> {
     name: o.name as string,
     slug: o.slug as string,
   }));
+}
+
+/** Comercios con coordenadas de sede principal (home mapa cliente). */
+export async function listActiveCommercesForDiscovery(): Promise<
+  CommerceDiscoveryItem[]
+> {
+  const db = createSupabaseAdminClient();
+  const { data: orgs } = await db
+    .from("organizations")
+    .select("id, name, slug")
+    .eq("status", "active")
+    .order("name");
+
+  const organizations = (orgs ?? []) as Array<Record<string, unknown>>;
+  if (organizations.length === 0) return [];
+
+  const orgIds = organizations.map((o) => o.id as string);
+  const { data: locations } = await db
+    .from("commerce_locations")
+    .select("organization_id, name, address, lat, lng, is_main")
+    .in("organization_id", orgIds)
+    .not("lat", "is", null)
+    .not("lng", "is", null);
+
+  const locRows = (locations ?? []) as Array<Record<string, unknown>>;
+  const byOrg = new Map<string, Record<string, unknown>>();
+  for (const loc of locRows) {
+    const orgId = loc.organization_id as string;
+    const existing = byOrg.get(orgId);
+    if (!existing || (loc.is_main && !existing.is_main)) {
+      byOrg.set(orgId, loc);
+    }
+  }
+
+  const items: CommerceDiscoveryItem[] = [];
+  for (const o of organizations) {
+    const orgId = o.id as string;
+    const loc = byOrg.get(orgId);
+    if (!loc) continue;
+    const lat = Number(loc.lat);
+    const lng = Number(loc.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    items.push({
+      id: orgId,
+      name: o.name as string,
+      slug: o.slug as string,
+      lat,
+      lng,
+      address: (loc.address as string | null) ?? null,
+      locationName: (loc.name as string | null) ?? null,
+    });
+  }
+  return items;
 }
 
 export async function getCommerceBySlug(

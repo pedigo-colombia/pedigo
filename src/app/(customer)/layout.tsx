@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { PedigoLogo } from "@/components/brand/pedigo-logo";
+import { CustomerMobileNav } from "@/components/shared/customer-mobile-nav";
 import { HeaderActions } from "@/components/shared/header-actions";
 import { getSession } from "@/modules/auth/session";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ export default async function CustomerLayout({
         </div>
       </header>
       <main className="mx-auto w-full max-w-4xl flex-1 p-4 sm:p-8">{children}</main>
+      <CustomerMobileNav />
     </div>
   );
 }
