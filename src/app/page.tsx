@@ -143,8 +143,8 @@ export default async function LandingPage() {
           </div>
           <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-border shadow-xl lg:aspect-square">
             <LandingImage
-              localSrc={landingImages.hero.src}
-              fallbackSrc={landingImages.hero.fallback}
+              src={landingImages.hero.src}
+              localSrc={landingImages.hero.local}
               alt={landingImages.hero.alt}
               priority
             />
@@ -199,8 +199,8 @@ export default async function LandingPage() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 lg:grid-cols-2">
           <div className="relative aspect-video overflow-hidden rounded-2xl border border-border shadow-lg">
             <LandingImage
-              localSrc={landingImages.mapa.src}
-              fallbackSrc={landingImages.mapa.fallback}
+              src={landingImages.mapa.src}
+              localSrc={landingImages.mapa.local}
               alt={landingImages.mapa.alt}
             />
           </div>
@@ -222,8 +222,8 @@ export default async function LandingPage() {
           <div className="lg:order-2">
             <div className="relative aspect-video overflow-hidden rounded-2xl border border-border shadow-lg">
               <LandingImage
-                localSrc={landingImages.pos.src}
-                fallbackSrc={landingImages.pos.fallback}
+                src={landingImages.pos.src}
+                localSrc={landingImages.pos.local}
                 alt={landingImages.pos.alt}
               />
             </div>

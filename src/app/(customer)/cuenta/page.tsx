@@ -1,9 +1,13 @@
 import { CommerceDiscoveryHome } from "@/components/customer/commerce-discovery-home";
+import { MONTERIA_CENTER } from "@/data/monteria-commerce";
 import { listMyAddresses } from "@/modules/customers/queries";
 import { listActiveCommercesForDiscovery } from "@/modules/orders/catalog-public";
 import { getSessionWithUser } from "@/modules/auth/session";
 
-const BOGOTA: [number, number] = [-74.08, 4.65];
+const DEFAULT_CENTER: [number, number] = [
+  MONTERIA_CENTER.lng,
+  MONTERIA_CENTER.lat,
+];
 
 export default async function CuentaPage() {
   const [{ user }, commerces, addresses] = await Promise.all([
@@ -19,7 +23,7 @@ export default async function CuentaPage() {
     ? [defaultAddr!.lng!, defaultAddr!.lat!]
     : commerces.length > 0
       ? [commerces[0].lng, commerces[0].lat]
-      : BOGOTA;
+      : DEFAULT_CENTER;
 
   return (
     <CommerceDiscoveryHome

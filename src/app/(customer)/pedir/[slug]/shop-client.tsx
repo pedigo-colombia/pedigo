@@ -6,6 +6,7 @@ import { Minus, Plus, Search, ShoppingCart, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { SegmentToggle } from "@/components/brand/segment-toggle";
+import { RemoteImage } from "@/components/ui/remote-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -218,17 +219,25 @@ export function ShopClient({
                   key={p.id}
                   type="button"
                   onClick={() => onProductClick(p)}
-                  className="flex flex-col rounded-xl border bg-background p-3 text-left transition-all hover:border-orange-500"
+                  className="flex flex-col overflow-hidden rounded-xl border bg-background text-left transition-all hover:border-orange-500"
                 >
-                  <span className="text-sm font-medium leading-tight">{p.name}</span>
-                  <span className="mt-2 font-semibold text-brand-orange">
-                    {formatCOP(p.basePrice)}
-                  </span>
-                  {(p.variants.length > 0 || p.extras.length > 0) && (
-                    <span className="mt-1 text-xs text-muted-foreground">
-                      Personalizable
+                  <RemoteImage
+                    src={p.imageUrl ?? ""}
+                    alt={p.name}
+                    containerClassName="aspect-[4/3] w-full"
+                    sizes="(max-width: 640px) 50vw, 180px"
+                  />
+                  <div className="flex flex-1 flex-col p-3">
+                    <span className="text-sm font-medium leading-tight">{p.name}</span>
+                    <span className="mt-2 font-semibold text-brand-orange">
+                      {formatCOP(p.basePrice)}
                     </span>
-                  )}
+                    {(p.variants.length > 0 || p.extras.length > 0) && (
+                      <span className="mt-1 text-xs text-muted-foreground">
+                        Personalizable
+                      </span>
+                    )}
+                  </div>
                 </button>
               ))
             )}

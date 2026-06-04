@@ -169,14 +169,18 @@ git push -u origin main
 
 ### 3.8 Crear tu usuario superadmin
 1. Regístrate una vez en la app (en local: `npm run dev` → http://localhost:3000/sign-up)
-   o crea el usuario desde Clerk → **Users → Create user**.
-2. 🖱️ Clerk → **Users** → abre tu usuario → **Metadata → Public metadata → Edit** → pega:
+   o crea el usuario desde Clerk → **Users → Create user** (puede ser con Google).
+2. Agrega el correo en `src/lib/auth/platform-access.ts` (`PLATFORM_SUPERADMIN_EMAILS`
+   y opcionalmente `COMMERCE_ACCESS_BY_EMAIL` para un comercio).
+3. Ejecuta `npm run user:grant-access` (aplica superadmin en Clerk y membresía al comercio).
+
+   Alternativa manual: Clerk → **Users** → **Public metadata**:
 
    ```json
    { "platform_role": "superadmin" }
    ```
 
-3. **Save**. Vuelve a iniciar sesión; ahora entras a `/admin`.
+4. Cierra sesión y vuelve a entrar; ahora entras a `/admin`.
 
 > Desde `/admin/comercios` el superadmin crea cada comercio (eso crea la org en
 > Clerk + la fila en Supabase + su configuración fiscal + numeración, y guarda el

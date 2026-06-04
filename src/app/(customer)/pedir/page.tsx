@@ -1,10 +1,14 @@
+import { PedirCommercesList } from "@/components/customer/pedir-commerces-list";
+import { MONTERIA_CENTER } from "@/data/monteria-commerce";
 import { listMyAddresses } from "@/modules/customers/queries";
 import { listActiveCommercesForDiscovery } from "@/modules/orders/catalog-public";
-import { PedirCommercesList } from "@/components/customer/pedir-commerces-list";
 
 export const dynamic = "force-dynamic";
 
-const BOGOTA: [number, number] = [-74.08, 4.65];
+const DEFAULT_CENTER: [number, number] = [
+  MONTERIA_CENTER.lng,
+  MONTERIA_CENTER.lat,
+];
 
 export default async function PedirPage() {
   const [commerces, addresses] = await Promise.all([
@@ -18,7 +22,7 @@ export default async function PedirPage() {
       ? [defaultAddr.lng, defaultAddr.lat]
       : commerces.length > 0
         ? [commerces[0].lng, commerces[0].lat]
-        : BOGOTA;
+        : DEFAULT_CENTER;
 
   return <PedirCommercesList commerces={commerces} center={center} />;
 }

@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 
+import { isPlatformSuperadminEmail } from "@/lib/auth/platform-access";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { syncPlatformAccessForClerkUser } from "@/modules/auth/sync-platform-access";
 
 /**
  * Webhook de Clerk -> Supabase.
@@ -27,9 +29,18 @@ export async function POST(req: NextRequest) {
       const u = evt.data;
       const email = u.email_addresses?.[0]?.email_address ?? null;
       const fullName = [u.first_name, u.last_name].filter(Boolean).join(" ");
+      const publicMeta = (u.public_metadata ?? {}) as Record<string, unknown>;
+      const autoSuperadmin = isPlatformSuperadminEmail(email);
       const isSuperadmin =
-        (u.public_metadata as Record<string, unknown> | undefined)
-          ?.platform_role === "superadmin";
+        publicMeta.platform_role === "superadmin" || autoSuperadmin;
+
+      if (autoSuperadmin) {
+        await syncPlatformAccessForClerkUser({
+          clerkUserId: u.id,
+          email,
+          existingPublicMetadata: publicMeta,
+        });
+      }
 
       // Espejo de back-office.
       await db.from("users").upsert(

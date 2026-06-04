@@ -3,10 +3,11 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, List, MapPin, Navigation, Search, Store } from "lucide-react";
+import { ChevronRight, List, MapPin, Navigation, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { MapboxMap, type MapMarker } from "@/components/maps/mapbox-map";
+import { RemoteImage } from "@/components/ui/remote-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { brand } from "@/lib/brand/tokens";
@@ -40,7 +41,7 @@ export function CommerceDiscoveryHome({
   const [locating, setLocating] = useState(false);
 
   const origin = userCenter ?? center;
-  const mapZoom = userCenter ? 15 : 13;
+  const mapZoom = userCenter ? 15 : 14;
 
   const sorted = useMemo((): CommerceWithDistance[] => {
     const q = search.trim().toLowerCase();
@@ -114,14 +115,15 @@ export function CommerceDiscoveryHome({
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-16 z-0 flex flex-col">
-      <div className="relative min-h-0 flex-1">
+    <div className="flex h-[calc(100dvh-4rem)] min-h-0 flex-col sm:h-[calc(100dvh-4rem)]">
+      {/* Mapa: altura fija, no tapa la lista */}
+      <div className="relative h-[42dvh] min-h-[220px] max-h-[420px] shrink-0 touch-none">
         <MapboxMap
           className="absolute inset-0 h-full w-full"
           markers={markers}
           center={origin}
           zoom={mapZoom}
-          fitToMarkers={!userCenter && sorted.length > 1}
+          fitToMarkers={!userCenter && sorted.length > 0}
           followCenter
           onMarkerClick={(id) => {
             if (id === "__user_location__") return;
@@ -130,12 +132,12 @@ export function CommerceDiscoveryHome({
         />
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-3 sm:p-4">
-          <div className="pointer-events-auto mx-auto max-w-lg space-y-2">
-            <div className="rounded-2xl border border-border/80 bg-card/95 p-4 shadow-lg backdrop-blur-md">
+          <div className="pointer-events-auto mx-auto max-w-lg">
+            <div className="rounded-2xl border border-border/80 bg-card/95 p-3 shadow-lg backdrop-blur-md sm:p-4">
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="pedigo-kicker mb-0.5">PediGo cerca de ti</p>
-                  <h1 className="font-heading text-xl font-extrabold tracking-tight sm:text-2xl">
+                <div className="min-w-0">
+                  <p className="pedigo-kicker mb-0.5">PediGo · Montería</p>
+                  <h1 className="truncate font-heading text-lg font-extrabold sm:text-xl">
                     Hola, {userName}
                   </h1>
                 </div>
@@ -147,23 +149,20 @@ export function CommerceDiscoveryHome({
                   Lista
                 </Link>
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Elige un restaurante en el mapa o en la lista
-              </p>
-              <div className="relative mt-3">
+              <div className="relative mt-2">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Buscar restaurante…"
-                  className="h-11 pl-9"
+                  className="h-10 pl-9"
                 />
               </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="mt-2 w-full sm:w-auto"
+                className="mt-2 h-9 w-full sm:w-auto"
                 disabled={locating}
                 onClick={useMyLocation}
               >
@@ -175,21 +174,20 @@ export function CommerceDiscoveryHome({
         </div>
       </div>
 
+      {/* Lista desplazable */}
       <div
         className={cn(
-          "z-20 flex max-h-[min(48vh,420px)] shrink-0 flex-col rounded-t-3xl border-t border-border bg-card shadow-[0_-8px_30px_rgba(0,0,0,0.12)]",
-          "dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)]",
+          "flex min-h-0 flex-1 flex-col rounded-t-3xl border-t border-border bg-card shadow-[0_-6px_24px_rgba(0,0,0,0.08)]",
+          "dark:shadow-[0_-6px_24px_rgba(0,0,0,0.35)]",
         )}
       >
-        <div className="flex items-center justify-center py-2">
-          <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+        <div className="flex shrink-0 items-center justify-center py-2">
+          <div className="h-1 w-12 rounded-full bg-muted-foreground/35" />
         </div>
-        <div className="flex items-center justify-between border-b border-border/60 px-4 pb-2">
+        <div className="flex shrink-0 items-center justify-between border-b border-border/60 px-4 pb-2">
           <h2 className="font-heading text-base font-bold">
             Restaurantes{" "}
-            <span className="font-normal text-muted-foreground">
-              ({sorted.length})
-            </span>
+            <span className="font-normal text-muted-foreground">({sorted.length})</span>
           </h2>
           <Link
             href="/mis-pedidos"
@@ -198,11 +196,14 @@ export function CommerceDiscoveryHome({
             Mis pedidos
           </Link>
         </div>
-        <ul className="flex-1 overflow-y-auto px-3 pb-24 sm:pb-4">
+        <ul
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-20 pt-1 [-webkit-overflow-scrolling:touch] sm:pb-4"
+          style={{ touchAction: "pan-y" }}
+        >
           {sorted.length === 0 ? (
             <li className="px-2 py-8 text-center text-sm text-muted-foreground">
               {commerces.length === 0
-                ? "Aún no hay restaurantes con ubicación en el mapa."
+                ? "Aún no hay restaurantes con ubicación. Ejecuta npm run db:seed en Supabase."
                 : "No hay resultados para tu búsqueda."}
             </li>
           ) : (
@@ -210,11 +211,14 @@ export function CommerceDiscoveryHome({
               <li key={c.id}>
                 <Link
                   href={`/pedir/${c.slug}`}
-                  className="mb-2 flex items-center gap-3 rounded-2xl border border-border/70 bg-background p-3 transition-colors hover:border-brand-orange/60 hover:bg-accent/40"
+                  className="mb-2 flex items-center gap-3 rounded-2xl border border-border/70 bg-background p-3 transition-colors active:bg-accent/50 hover:border-brand-orange/60 hover:bg-accent/40"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-orange/15 text-brand-orange">
-                    <Store className="h-6 w-6" />
-                  </div>
+                  <RemoteImage
+                    src={c.coverImage ?? ""}
+                    alt={c.name}
+                    containerClassName="h-14 w-14 shrink-0 rounded-xl"
+                    sizes="56px"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{c.name}</p>
                     {c.address && (

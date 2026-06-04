@@ -22,6 +22,13 @@
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
+import {
+  MONTERIA_CENTER,
+  MONTERIA_COMMERCES,
+  productImageFor,
+  productNameFor,
+} from "./monteria-data";
+
 config({ path: ".env.local" });
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -41,13 +48,7 @@ const db = createClient(url, key, {
 const rand = (n: number) => Math.floor(Math.random() * n);
 const pick = <T,>(arr: T[]) => arr[rand(arr.length)];
 
-const COMMERCES = [
-  { name: "Pizzería Roma", slug: "pizzeria-roma", prefix: "FR" },
-  { name: "Burger House", slug: "burger-house", prefix: "FB" },
-  { name: "Sushi Nori", slug: "sushi-nori", prefix: "FS" },
-  { name: "Arepas El Paisa", slug: "arepas-el-paisa", prefix: "FA" },
-  { name: "Café Central", slug: "cafe-central", prefix: "FC" },
-];
+const COMMERCES = [...MONTERIA_COMMERCES];
 
 const PRODUCT_WORDS = [
   "Especial", "Clásica", "Premium", "Mixta", "Familiar", "Personal",
@@ -74,7 +75,12 @@ async function seedCommerce(c: (typeof COMMERCES)[number], index: number) {
 
   const { data: org, error } = await db
     .from("organizations")
-    .insert({ name: c.name, slug: c.slug, clerk_org_id: `seed_${c.slug}` })
+    .insert({
+      name: c.name,
+      slug: c.slug,
+      status: "active",
+      clerk_org_id: `seed_${c.slug}`,
+    })
     .select()
     .single();
   if (error || !org) throw error ?? new Error("org");
@@ -99,9 +105,10 @@ async function seedCommerce(c: (typeof COMMERCES)[number], index: number) {
     .insert({
       organization_id: orgId,
       name: "Sede principal",
-      address: `Calle ${10 + index} #${index}-${index}`,
-      lat: 4.65 + index * 0.01,
-      lng: -74.05 - index * 0.01,
+      address: c.address,
+      lat: c.lat,
+      lng: c.lng,
+      is_main: true,
     })
     .select()
     .single();
@@ -113,11 +120,13 @@ async function seedCommerce(c: (typeof COMMERCES)[number], index: number) {
     .insert(catNames.map((name, i) => ({ organization_id: orgId, name, sort_order: i })))
     .select();
 
-  // 25 productos
+  // 25 productos con imagen
   const products = Array.from({ length: 25 }).map((_, i) => ({
     organization_id: orgId,
     category_id: cats ? pick(cats).id : null,
-    name: `${c.name.split(" ")[0]} ${pick(PRODUCT_WORDS)} ${i + 1}`,
+    name: productNameFor(c.menuTheme, i),
+    description: `Especialidad de ${c.name}`,
+    image_url: productImageFor(c.menuTheme, i),
     base_price: (rand(40) + 6) * 1000,
     is_favorite: i < 5,
     tax_rate: 0.19,
@@ -153,10 +162,12 @@ async function seedCommerce(c: (typeof COMMERCES)[number], index: number) {
     await db.from("customer_addresses").insert({
       customer_id: customer.id,
       label: "Casa",
-      line1: `Carrera ${index + 5} #${index}-${index}`,
-      city: "Bogotá",
-      lat: 4.66 + index * 0.01,
-      lng: -74.06 - index * 0.01,
+      line1: `Calle 41 #${6 + index}-${20 + index}, Montería`,
+      city: "Montería",
+      department: "Córdoba",
+      municipality: "Montería",
+      lat: MONTERIA_CENTER.lat + (index - 2) * 0.001,
+      lng: MONTERIA_CENTER.lng + (index - 2) * 0.001,
       is_default: true,
     });
   }
@@ -274,8 +285,8 @@ async function seedCouriers(orgIds: string[]) {
       couriers.map((c, i) => ({
         ...c,
         vehicle_type: "moto",
-        current_lat: 4.66 + i * 0.01,
-        current_lng: -74.06 - i * 0.01,
+        current_lat: MONTERIA_CENTER.lat + i * 0.002,
+        current_lng: MONTERIA_CENTER.lng + i * 0.002,
       })),
     )
     .select();
@@ -300,8 +311,8 @@ async function seedCouriers(orgIds: string[]) {
     inserted.flatMap((c, ci) =>
       Array.from({ length: 5 }).map((_, t) => ({
         courier_id: c.id,
-        lat: 4.66 + ci * 0.01 + t * 0.001,
-        lng: -74.06 - ci * 0.01 - t * 0.001,
+        lat: MONTERIA_CENTER.lat + ci * 0.002 + t * 0.0003,
+        lng: MONTERIA_CENTER.lng + ci * 0.002 + t * 0.0003,
         heading: rand(360),
         speed: 20 + rand(20),
       })),
@@ -325,8 +336,8 @@ async function seedDeliveries(orgIds: string[], courierIds: string[]) {
       .eq("clerk_user_id", `seed_cust_${COMMERCES[i].slug}`)
       .maybeSingle();
 
-    const destLat = 4.67 + i * 0.01;
-    const destLng = -74.07 - i * 0.01;
+    const destLat = MONTERIA_CENTER.lat + 0.003 + i * 0.001;
+    const destLng = MONTERIA_CENTER.lng - 0.002 - i * 0.001;
 
     const { data: order } = await db
       .from("orders")
@@ -368,8 +379,8 @@ async function seedDeliveries(orgIds: string[], courierIds: string[]) {
       Array.from({ length: 6 }).map((_, t) => ({
         courier_id: courierId,
         order_id: order.id,
-        lat: 4.65 + i * 0.01 + t * 0.003,
-        lng: -74.05 - i * 0.01 - t * 0.003,
+        lat: MONTERIA_CENTER.lat - 0.002 + i * 0.001 + t * 0.0004,
+        lng: MONTERIA_CENTER.lng + 0.001 - i * 0.001 - t * 0.0004,
         heading: rand(360),
         speed: 25,
       })),
@@ -378,13 +389,29 @@ async function seedDeliveries(orgIds: string[], courierIds: string[]) {
     // Última posición conocida del repartidor.
     await db
       .from("couriers")
-      .update({ current_lat: 4.65 + i * 0.01 + 0.015, current_lng: -74.05 - i * 0.01 - 0.015 })
+      .update({
+        current_lat: MONTERIA_CENTER.lat + i * 0.001 + 0.002,
+        current_lng: MONTERIA_CENTER.lng - i * 0.001 - 0.002,
+      })
       .eq("id", courierId);
   }
 }
 
+/** Slugs del seed antiguo (Bogotá) que se eliminan al migrar a Montería. */
+const LEGACY_DEMO_SLUGS = [
+  "pizzeria-roma",
+  "burger-house",
+  "sushi-tokyo",
+  "cafe-moka",
+  "pollo-frito-express",
+  "tacos-mex",
+];
+
 async function main() {
-  console.log("Sembrando datos de PediGo…");
+  console.log("Sembrando datos de PediGo (Montería)…");
+  for (const slug of LEGACY_DEMO_SLUGS) {
+    await clearForSlug(slug);
+  }
   const orgIds: string[] = [];
   for (let i = 0; i < COMMERCES.length; i++) {
     const id = await seedCommerce(COMMERCES[i], i);

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { COMMERCE_COVER_BY_SLUG } from "@/data/monteria-commerce";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Catalog } from "@/modules/pos/types";
 
@@ -15,6 +16,7 @@ export interface CommerceDiscoveryItem extends CommerceListItem {
   lng: number;
   address: string | null;
   locationName: string | null;
+  coverImage?: string | null;
 }
 
 /** Comercios activos disponibles para pedir (lectura pública vía servidor). */
@@ -73,14 +75,16 @@ export async function listActiveCommercesForDiscovery(): Promise<
     const lat = Number(loc.lat);
     const lng = Number(loc.lng);
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    const slug = o.slug as string;
     items.push({
       id: orgId,
       name: o.name as string,
-      slug: o.slug as string,
+      slug,
       lat,
       lng,
       address: (loc.address as string | null) ?? null,
       locationName: (loc.name as string | null) ?? null,
+      coverImage: COMMERCE_COVER_BY_SLUG[slug] ?? null,
     });
   }
   return items;

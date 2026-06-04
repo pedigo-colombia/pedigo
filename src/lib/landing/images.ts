@@ -1,24 +1,22 @@
 /**
- * Imágenes de la landing. Por defecto Unsplash; reemplaza con archivos en /public/landing/.
+ * Imágenes de la landing (Unsplash). Opcional: reemplazar con archivos en /public/landing/.
  * Ver public/landing/README.md
  */
 export const landingImages = {
   hero: {
-    src: "/landing/hero.jpg",
-    fallback:
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80",
+    /** URL principal (siempre visible sin archivos locales). */
+    src: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1400&q=85",
+    local: "/landing/hero.jpg",
     alt: "Restaurante con ambiente acogedor",
   },
   mapa: {
-    src: "/landing/mapa-pedidos.jpg",
-    fallback:
-      "https://images.unsplash.com/photo-1526628953301-4e589a634a0d?w=800&q=80",
-    alt: "Entrega de pedido a domicilio",
+    src: "https://images.unsplash.com/photo-1607083207639-9b46259a3f22?w=1000&q=85",
+    local: "/landing/mapa-pedidos.jpg",
+    alt: "Repartidor con pedido a domicilio",
   },
   pos: {
-    src: "/landing/pos-cocina.jpg",
-    fallback:
-      "https://images.unsplash.com/photo-1556742502-ec7ee0a097b2?w=800&q=80",
-    alt: "Operación en cocina y punto de venta",
+    src: "https://images.unsplash.com/photo-1556742502-ec7ee0a097b2?w=1000&q=85",
+    local: "/landing/pos-cocina.jpg",
+    alt: "Cocina y operación de restaurante",
   },
 } as const;
